@@ -1,0 +1,239 @@
+﻿using RambollTowerGenerator.Common;
+using RambollTowerGenerator.Models;
+using System;
+using System.Collections.Generic;
+using Tekla.Structures.Geometry3d;
+using Tekla.Structures.Model;
+
+namespace RambollTowerGenerator.Builders
+{
+    public class BracingBuilder
+    {
+        private readonly CageLegGeometryBuilder _geometryBuilder;
+
+        public BracingBuilder()
+        {
+            _geometryBuilder = new CageLegGeometryBuilder();
+        }
+
+        public void CreateBracing(Model model, TowerModel tower)
+        {
+            if (tower.Bracing.BracingType == BracingType.None)
+                return;
+
+            List<List<Point>> legNodes = _geometryBuilder.BuildLegNodes(tower);
+
+            switch (tower.Bracing.BracingType)
+            {
+                case BracingType.XBracing:
+                    CreateXBracing(model, tower, legNodes);
+                    break;
+            }
+
+            model.CommitChanges();
+        }
+
+        private void CreateXBracing(Model model, TowerModel tower, List<List<Point>> legNodes)
+        {
+            int bracingLevels = tower.Bracing.BracingLevels;
+            int legCount = tower.LegCount;
+
+            if (bracingLevels < 1 || legNodes.Count == 0 || legNodes[0].Count < 2)
+                return;
+
+            double zStart = legNodes[0][0].Z;
+            double zEnd = legNodes[0][legNodes[0].Count - 1].Z;
+            double totalHeight = zEnd - zStart;
+
+            if (totalHeight <= 0.0)
+                return;
+
+            double levelHeight = totalHeight / bracingLevels;
+
+            for (int level = 0; level < bracingLevels; level++)
+            {
+                double levelBottomZ = zStart + (level * levelHeight);
+                double levelTopZ = (level == bracingLevels - 1) ? zEnd : zStart + ((level + 1) * levelHeight);
+                double levelMidZ = (levelBottomZ + levelTopZ) / 2.0;
+
+                for (int faceIndex = 0; faceIndex < legCount; faceIndex++)
+                {
+                    int leg1Index = faceIndex;
+                    int leg2Index = (faceIndex + 1) % legCount;
+
+                    Point bottomLeft = GetPointAtZ(legNodes[leg1Index], levelBottomZ);
+                    Point topLeft = GetPointAtZ(legNodes[leg1Index], levelTopZ);
+                    Point bottomRight = GetPointAtZ(legNodes[leg2Index], levelBottomZ);
+                    Point topRight = GetPointAtZ(legNodes[leg2Index], levelTopZ);
+
+                    // Apply offsets along the diagonal direction for proper connection clearance
+                    Point bottomLeftOffset = ApplyDiagonalOffset(bottomLeft, topRight, tower.Bracing.BottomOffset);
+                    Point topRightOffset = ApplyDiagonalOffset(topRight, bottomLeft, tower.Bracing.TopOffset);
+                    Point bottomRightOffset = ApplyDiagonalOffset(bottomRight, topLeft, tower.Bracing.BottomOffset);
+                    Point topLeftOffset = ApplyDiagonalOffset(topLeft, bottomRight, tower.Bracing.TopOffset);
+
+                    // Get leg plate thickness from profile string (e.g., "BLL100*100*5" -> 5mm)
+                    double plateThickness = GetPlateThicknessFromProfile(tower.Profile.LegProfile);
+
+                    // Create diagonal1 (/) - outer face of plate
+                    Beam diagonal1 = CreateBracingBeam(
+                        bottomLeftOffset,
+                        topRightOffset,
+                        tower.Bracing.DiagonalProfile,
+                        tower.Bracing.DiagonalMaterial,
+                        $"X_DIAG_L{level}_F{faceIndex}_1",
+                        plateThickness / 2.0,  // Offset to outer face
+                        true);  // isOuterBrace
+                    diagonal1.Insert();
+
+                    // Create diagonal2 (\) - inner face of plate
+                    Beam diagonal2 = CreateBracingBeam(
+                        bottomRightOffset,
+                        topLeftOffset,
+                        tower.Bracing.DiagonalProfile,
+                        tower.Bracing.DiagonalMaterial,
+                        $"X_DIAG_L{level}_F{faceIndex}_2",
+                        -plateThickness / 2.0,  // Offset to inner face
+                        false);  // isInnerBrace
+                    diagonal2.Insert();
+                }
+
+                CreateHorizontalBracingRingAtZ(tower, legNodes, levelMidZ, level);
+            }
+        }
+
+        private void CreateHorizontalBracingRingAtZ(
+            TowerModel tower,
+            List<List<Point>> legNodes,
+            double z,
+            int level)
+        {
+            int legCount = tower.LegCount;
+
+            for (int faceIndex = 0; faceIndex < legCount; faceIndex++)
+            {
+                int leg1Index = faceIndex;
+                int leg2Index = (faceIndex + 1) % legCount;
+
+                Point p1 = GetPointAtZ(legNodes[leg1Index], z);
+                Point p2 = GetPointAtZ(legNodes[leg2Index], z);
+
+                Beam horizontal = CreateBracingBeam(
+                    p1,
+                    p2,
+                    tower.Bracing.HorizontalProfile,
+                    tower.Bracing.HorizontalMaterial,
+                    $"X_HORIZ_M{level}_F{faceIndex}");
+                horizontal.Insert();
+            }
+        }
+
+        private Point GetPointAtZ(List<Point> legNodes, double targetZ)
+        {
+            if (targetZ <= legNodes[0].Z)
+                return new Point(legNodes[0].X, legNodes[0].Y, legNodes[0].Z);
+
+            int last = legNodes.Count - 1;
+            if (targetZ >= legNodes[last].Z)
+                return new Point(legNodes[last].X, legNodes[last].Y, legNodes[last].Z);
+
+            for (int i = 0; i < legNodes.Count - 1; i++)
+            {
+                Point a = legNodes[i];
+                Point b = legNodes[i + 1];
+
+                if (targetZ >= a.Z && targetZ <= b.Z)
+                {
+                    double dz = b.Z - a.Z;
+                    if (dz <= 0.000001)
+                        return new Point(a.X, a.Y, targetZ);
+
+                    double t = (targetZ - a.Z) / dz;
+
+                    return new Point(
+                        a.X + ((b.X - a.X) * t),
+                        a.Y + ((b.Y - a.Y) * t),
+                        targetZ);
+                }
+            }
+
+            return new Point(legNodes[last].X, legNodes[last].Y, legNodes[last].Z);
+        }
+
+        private Point ApplyDiagonalOffset(Point fromPoint, Point towardPoint, double offset)
+        {
+            if (offset <= 0.0)
+                return fromPoint;
+
+            Vector direction = new Vector(
+                towardPoint.X - fromPoint.X,
+                towardPoint.Y - fromPoint.Y,
+                towardPoint.Z - fromPoint.Z);
+
+            double length = direction.GetLength();
+            if (length < 0.001)
+                return fromPoint;
+
+            direction = direction.GetNormal();
+
+            return new Point(
+                fromPoint.X + direction.X * offset,
+                fromPoint.Y + direction.Y * offset,
+                fromPoint.Z + direction.Z * offset);
+        }
+
+        private double GetPlateThicknessFromProfile(string profileString)
+        {
+            // Parse profile string like "BLL100*100*5" to get thickness (last number)
+            // Format: BLL[width]*[depth]*[thickness]
+            if (string.IsNullOrEmpty(profileString))
+                return 5.0; // Default 5mm
+
+            string[] parts = profileString.Split('*');
+            if (parts.Length >= 3)
+            {
+                string thicknessPart = parts[2].Trim();
+                if (double.TryParse(thicknessPart, out double thickness))
+                {
+                    return thickness;
+                }
+            }
+
+            return 5.0; // Default 5mm if parsing fails
+        }
+
+        private Beam CreateBracingBeam(Point start, Point end, string profile, string material, string label, double planeOffset, bool isOuterBrace)
+        {
+            Beam beam = new Beam(start, end);
+            beam.Profile.ProfileString = profile;
+            beam.Material.MaterialString = material;
+            beam.Name = "TOWER_BRACING";
+            beam.Class = "5";
+
+            // Position the brace so the back of the profile touches the plate surface
+            // For outer brace: BEHIND positions the back face against the outer plate surface
+            // For inner brace: FRONT positions the back face against the inner plate surface
+            beam.Position.Plane = Position.PlaneEnum.LEFT;
+            beam.Position.Depth = isOuterBrace ? Position.DepthEnum.BEHIND : Position.DepthEnum.FRONT;
+            beam.Position.Rotation = Position.RotationEnum.FRONT;
+            beam.Position.PlaneOffset = planeOffset;
+
+            beam.SetLabel(label);
+            return beam;
+        }
+
+        private Beam CreateHorizontalBracingBeam(Point start, Point end, string profile, string material, string label)
+        {
+            Beam beam = new Beam(start, end);
+            beam.Profile.ProfileString = profile;
+            beam.Material.MaterialString = material;
+            beam.Name = "TOWER_BRACING";
+            beam.Class = "5";
+            beam.Position.Plane = Position.PlaneEnum.MIDDLE;
+            beam.Position.Depth = Position.DepthEnum.MIDDLE;
+            beam.Position.Rotation = Position.RotationEnum.FRONT;
+            beam.SetLabel(label);
+            return beam;
+        }
+    }
+}

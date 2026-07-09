@@ -1,0 +1,16 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RambollTowerGenerator.Models
+{
+    public class GeometryModel
+    {
+        public int SegmentCount { get; set; } = 6;
+        public double TotalHeight { get; set; } = 30000.0;
+        public double BaseRadius { get; set; } = 2500.0;
+        public double TopRadius { get; set; } = 1200.0;
+    }
+}

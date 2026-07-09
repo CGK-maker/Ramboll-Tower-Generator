@@ -1,0 +1,73 @@
+﻿using System.ComponentModel;
+using RambollTowerGenerator.Common;
+using RambollTowerGenerator.Models;
+using TD = Tekla.Structures.Datatype;
+using Tekla.Structures.Dialog;
+
+namespace RambollTowerGenerator.ViewModels
+{
+    public class MainViewModel : INotifyPropertyChanged
+    {
+        private TowerModel _towerModel;
+        private int _towerType = 0;
+        private string profile = string.Empty;
+        private string material = string.Empty;
+
+        public MainViewModel()
+        {
+            _towerModel = new TowerModel();
+        }
+
+        [StructuresDialog("towerType", typeof(TD.Integer))]
+        public int TowerType
+        {
+            get { return _towerType; }
+            set
+            {
+                _towerType = value;
+                _towerModel.TowerType = value == 0 ? Common.TowerType.ThreeLeg : Common.TowerType.FourLeg;
+                OnPropertyChanged(nameof(TowerType));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("profile", typeof(TD.String))]
+        public string Profilename
+        {
+            get { return profile; }
+            set
+            {
+                profile = value;
+                _towerModel.Profile.LegProfile = value;
+                OnPropertyChanged("Profilename");
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("material", typeof(TD.String))]
+        public string Material
+        {
+            get { return material; }
+            set
+            {
+                material = value;
+                _towerModel.Profile.LegMaterial = value;
+                OnPropertyChanged("Material");
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        public TowerModel Tower
+        {
+            get { return _towerModel; }
+            set { _towerModel = value; }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}

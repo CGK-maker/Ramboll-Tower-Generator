@@ -1,0 +1,42 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Tekla.Structures.Plugins;
+using RambollTowerGenerator.Common;
+
+namespace RambollTowerGenerator.Models
+{
+    public class TowerPluginData
+    {
+        [StructuresField("towertype")]
+        public int TowerType;
+
+        [StructuresField("profile")]
+        public string profile;
+
+        [StructuresField("material")]
+        public string material;
+
+        [StructuresField("basewidth")]
+        public double basewidth;
+
+        [StructuresField("topwidth")]
+        public double topwidth;
+
+        [StructuresField("segmentcount")]
+        public int segmentcount;
+
+        [StructuresField("totalheight")]
+        public double totalheight;
+
+        [StructuresField("cagetype")]
+        public int cagetype;
+
+        [StructuresField("verticalheight")]
+        public double verticalheight;
+
+        [StructuresField("vertsegcnt")]
+        public int verticalsegmentcount;
+    }
+}

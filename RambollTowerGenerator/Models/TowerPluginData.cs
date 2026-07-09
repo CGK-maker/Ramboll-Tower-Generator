@@ -1,0 +1,95 @@
+﻿using Tekla.Structures.Plugins;
+
+namespace RambollTowerGenerator.Models
+{
+    public class TowerPluginData
+    {
+        [StructuresField("towertype")]
+        public int TowerType = 0;
+
+        [StructuresField("profile")]
+        public string profile = "BLL100*100*5";
+
+        [StructuresField("material")]
+        public string material = "STEEL_UNDEFINED";
+
+        [StructuresField("basewidth")]
+        public double basewidth = 5000.0;
+
+        [StructuresField("topwidth")]
+        public double topwidth = 2400.0;
+
+        [StructuresField("segmentcount")]
+        public int segmentcount = 6;
+
+        [StructuresField("totalheight")]
+        public double totalheight = 30000.0;
+
+        [StructuresField("segmentgap")]
+        public double segmentgap = 3.0;
+
+        [StructuresField("cagetype")]
+        public int cagetype = 0;
+
+        [StructuresField("verticalheight")]
+        public double verticalheight = 0.0;
+
+        [StructuresField("vertsegcnt")]
+        public int verticalsegmentcount = 2;
+
+        [StructuresField("bracingtype")]
+        public int bracingtype = 1;
+
+        [StructuresField("diagprofile")]
+        public string diagprofile = "BLL100*100*5";
+
+        [StructuresField("diagmaterial")]
+        public string diagmaterial = "STEEL_UNDEFINED";
+
+        [StructuresField("horizprofile")]
+        public string horizprofile = "BLL100*100*5";
+
+        [StructuresField("horizmaterial")]
+        public string horizmaterial = "STEEL_UNDEFINED";
+
+        [StructuresField("bracinglevels")]
+        public int bracinglevels = 3;
+
+        // Joint/Splice fields
+        [StructuresField("spliceprofile")]
+        public string spliceprofile = "PL10";
+
+        [StructuresField("splicematerial")]
+        public string splicematerial = "STEEL_UNDEFINED";
+
+        [StructuresField("boltsize")]
+        public string boltsize = "M16";
+
+        [StructuresField("boltstandard")]
+        public string boltstandard = "8.8";
+
+        [StructuresField("spliceplatelength")]
+        public double spliceplatelength = 400.0;
+
+        [StructuresField("spliceplatewidth")]
+        public double spliceplatewidth = 100.0;
+
+        [StructuresField("spliceplatethick")]
+        public double spliceplatethick = 10.0;
+
+        [StructuresField("boltrows")]
+        public int boltrows = 2;
+
+        [StructuresField("boltsperrow")]
+        public int boltsperrow = 2;
+
+        [StructuresField("boltspacingx")]
+        public double boltspacingx = 60.0;
+
+        [StructuresField("boltspacingy")]
+        public double boltspacingy = 80.0;
+
+        [StructuresField("edgedistance")]
+        public double edgedistance = 40.0;
+    }
+}

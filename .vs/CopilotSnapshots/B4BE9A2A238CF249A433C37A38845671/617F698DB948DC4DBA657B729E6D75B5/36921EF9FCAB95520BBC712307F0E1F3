@@ -1,0 +1,378 @@
+﻿using System;
+using System.ComponentModel;
+using RambollTowerGenerator.Common;
+using RambollTowerGenerator.Models;
+using TD = Tekla.Structures.Datatype;
+using Tekla.Structures.Dialog;
+
+namespace RambollTowerGenerator.ViewModels
+{
+    public class MainViewModel : INotifyPropertyChanged
+    {
+        private TowerModel _towerModel;
+        private int _towerType = 0;
+        private string profile = "BLL100*100*5";
+        private string material = "STEEL_UNDEFINED";
+        private double _baseWidth = 5000.0;
+        private double _topWidth = 2400.0;
+        private int _segmentCount = 6;
+        private double _totalHeight = 30000.0;
+        private double _segmentGap = 3.0; // Add this field
+        private int _cageType = 0;
+        private double _verticalHeight = 0.0;
+        private int _verticalSegmentCount = 2;
+
+        // Bracing properties
+        private int _bracingType = 1; // Default to XBracing
+        private string _diagonalProfile = "BLL100*100*5";
+        private string _diagonalMaterial = "STEEL_UNDEFINED";
+        private string _horizontalProfile = "BLL100*100*5";
+        private string _horizontalMaterial = "STEEL_UNDEFINED";
+        private int _bracingLevels = 3;
+        private bool _includeTopHorizontal = true;
+        private bool _includeBottomHorizontal = false;
+        private double _topOffset = 100.0;
+        private double _bottomOffset = 100.0;
+
+        // Joint/Splice properties
+        private string _splicePlateProfile = "PL200*10";
+        private string _splicePlateMaterial = "STEEL_UNDEFINED";
+        private string _boltSize = "M16";
+        private string _boltStandard = "8.8";
+        private double _splicePlateLength = 400.0;
+        private int _boltRows = 2;
+        private int _boltsPerRow = 2;
+        private double _boltSpacingX = 60.0;
+        private double _boltSpacingY = 80.0;
+        private double _edgeDistance = 40.0;
+
+        public MainViewModel()
+        {
+            _towerModel = new TowerModel();
+            _towerModel.Profile.LegProfile = profile;
+            _towerModel.Profile.LegMaterial = material;
+            _towerModel.Geometry.BaseWidth = _baseWidth;
+            _towerModel.Geometry.TopWidth = _topWidth;
+            _towerModel.Geometry.SegmentCount = _segmentCount;
+            _towerModel.Geometry.TotalHeight = _totalHeight;
+            _towerModel.Geometry.SegmentGap = _segmentGap;
+            _towerModel.Cage.CageType = Common.CageType.Conical;
+            _towerModel.Cage.VerticalHeight = _verticalHeight;
+            _towerModel.Cage.VerticalSegmentCount = _verticalSegmentCount;
+
+            // Initialize bracing properties
+            _towerModel.Bracing.BracingType = Common.BracingType.XBracing;
+            _towerModel.Bracing.DiagonalProfile = _diagonalProfile;
+            _towerModel.Bracing.DiagonalMaterial = _diagonalMaterial;
+            _towerModel.Bracing.HorizontalProfile = _horizontalProfile;
+            _towerModel.Bracing.HorizontalMaterial = _horizontalMaterial;
+            _towerModel.Bracing.BracingLevels = _bracingLevels;
+            _towerModel.Bracing.TopOffset = _topOffset;
+            _towerModel.Bracing.BottomOffset = _bottomOffset;
+
+            // Initialize joint/splice properties
+            _towerModel.Joint.SplicePlateProfile = _splicePlateProfile;
+            _towerModel.Joint.SplicePlateMaterial = _splicePlateMaterial;
+            _towerModel.Joint.BoltSize = _boltSize;
+            _towerModel.Joint.BoltStandard = _boltStandard;
+            _towerModel.Joint.SplicePlateLength = _splicePlateLength;
+            _towerModel.Joint.BoltRows = _boltRows;
+            _towerModel.Joint.BoltsPerRow = _boltsPerRow;
+            _towerModel.Joint.BoltSpacingX = _boltSpacingX;
+            _towerModel.Joint.BoltSpacingY = _boltSpacingY;
+            _towerModel.Joint.EdgeDistance = _edgeDistance;
+        }
+
+        [StructuresDialog("towertype", typeof(TD.Integer))]
+        public int TowerType
+        {
+            get { return _towerType; }
+            set
+            {
+                int normalized = value == int.MinValue ? 0 : (value < 0 || value > 1 ? 0 : value);
+                _towerType = normalized;
+                _towerModel.TowerType = normalized == 0 ? Common.TowerType.ThreeLeg : Common.TowerType.FourLeg;
+                OnPropertyChanged(nameof(TowerType));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("profile", typeof(TD.String))]
+        public string Profilename
+        {
+            get { return profile; }
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? "BLL100*100*5" : value;
+                profile = normalized;
+                _towerModel.Profile.LegProfile = normalized;
+                OnPropertyChanged(nameof(Profilename));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("material", typeof(TD.String))]
+        public string Material
+        {
+            get { return material; }
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? "STEEL_UNDEFINED" : value;
+                material = normalized;
+                _towerModel.Profile.LegMaterial = normalized;
+                OnPropertyChanged(nameof(Material));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("basewidth", typeof(TD.Double))]
+        public double BaseWidth
+        {
+            get { return _baseWidth; }
+            set
+            {
+                double normalized = (value == double.MinValue || value <= 0.0) ? 5000.0 : value;
+                _baseWidth = normalized;
+                _towerModel.Geometry.BaseWidth = normalized;
+                OnPropertyChanged(nameof(BaseWidth));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("topwidth", typeof(TD.Double))]
+        public double TopWidth
+        {
+            get { return _topWidth; }
+            set
+            {
+                double normalized = (value == double.MinValue || value <= 0.0) ? 2400.0 : value;
+                _topWidth = normalized;
+                _towerModel.Geometry.TopWidth = normalized;
+                OnPropertyChanged(nameof(TopWidth));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("segmentcount", typeof(TD.Integer))]
+        public int SegmentCount
+        {
+            get { return _segmentCount; }
+            set
+            {
+                int normalized = value == int.MinValue || value < 1 ? 6 : value;
+                _segmentCount = normalized;
+                _towerModel.Geometry.SegmentCount = normalized;
+                OnPropertyChanged(nameof(SegmentCount));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("totalheight", typeof(TD.Double))]
+        public double TotalHeight
+        {
+            get { return _totalHeight; }
+            set
+            {
+                double normalized = (value == double.MinValue || value <= 0.0) ? 30000.0 : value;
+                _totalHeight = normalized;
+                _towerModel.Geometry.TotalHeight = normalized;
+                OnPropertyChanged(nameof(TotalHeight));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        // Add this new property after TotalHeight
+        [StructuresDialog("segmentgap", typeof(TD.Double))]
+        public double SegmentGap
+        {
+            get { return _segmentGap; }
+            set
+            {
+                double normalized = (value == double.MinValue || value < 0.0) ? 3.0 : value;
+                _segmentGap = normalized;
+                _towerModel.Geometry.SegmentGap = normalized;
+                OnPropertyChanged(nameof(SegmentGap));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("cagetype", typeof(TD.Integer))]
+        public int CageType
+        {
+            get { return _cageType; }
+            set
+            {
+                int normalized = value == int.MinValue ? 0 : (value < 0 || value > 2 ? 0 : value);
+                _cageType = normalized;
+                _towerModel.Cage.CageType = normalized == 1 ? Common.CageType.Vertical : (normalized == 2 ? Common.CageType.ConicalVertical : Common.CageType.Conical);
+                OnPropertyChanged(nameof(CageType));
+                OnPropertyChanged(nameof(IsConicalVerticalSelected));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("verticalheight", typeof(TD.Double))]
+        public double VerticalHeight
+        {
+            get { return _verticalHeight; }
+            set
+            {
+                double normalized = value == double.MinValue || value < 0.0 ? 0.0 : value;
+                _verticalHeight = normalized;
+                _towerModel.Cage.VerticalHeight = normalized;
+                OnPropertyChanged(nameof(VerticalHeight));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("vertsegcnt", typeof(TD.Integer))]
+        public int VerticalSegmentCount
+        {
+            get { return _verticalSegmentCount; }
+            set
+            {
+                int normalized = value == int.MinValue || value < 1 ? 2 : value;
+                _verticalSegmentCount = normalized;
+                _towerModel.Cage.VerticalSegmentCount = normalized;
+                OnPropertyChanged(nameof(VerticalSegmentCount));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        // Bracing Properties
+        [StructuresDialog("bracingtype", typeof(TD.Integer))]
+        public int BracingType
+        {
+            get { return _bracingType; }
+            set
+            {
+                int normalized = value == int.MinValue ? 1 : (value < 0 || value > 1 ? 1 : value);
+                _bracingType = normalized;
+                _towerModel.Bracing.BracingType = normalized == 0 ? Common.BracingType.None : Common.BracingType.XBracing;
+                OnPropertyChanged(nameof(BracingType));
+                OnPropertyChanged(nameof(IsBracingEnabled));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("diagprofile", typeof(TD.String))]
+        public string DiagonalProfile
+        {
+            get { return _diagonalProfile; }
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? "BLL100*100*5" : value;
+                _diagonalProfile = normalized;
+                _towerModel.Bracing.DiagonalProfile = normalized;
+                OnPropertyChanged(nameof(DiagonalProfile));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("diagmaterial", typeof(TD.String))]
+        public string DiagonalMaterial
+        {
+            get { return _diagonalMaterial; }
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? "STEEL_UNDEFINED" : value;
+                _diagonalMaterial = normalized;
+                _towerModel.Bracing.DiagonalMaterial = normalized;
+                OnPropertyChanged(nameof(DiagonalMaterial));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("horizprofile", typeof(TD.String))]
+        public string HorizontalProfile
+        {
+            get { return _horizontalProfile; }
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? "BLL100*100*5" : value;
+                _horizontalProfile = normalized;
+                _towerModel.Bracing.HorizontalProfile = normalized;
+                OnPropertyChanged(nameof(HorizontalProfile));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("horizmaterial", typeof(TD.String))]
+        public string HorizontalMaterial
+        {
+            get { return _horizontalMaterial; }
+            set
+            {
+                string normalized = string.IsNullOrWhiteSpace(value) ? "STEEL_UNDEFINED" : value;
+                _horizontalMaterial = normalized;
+                _towerModel.Bracing.HorizontalMaterial = normalized;
+                OnPropertyChanged(nameof(HorizontalMaterial));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("bracinglevels", typeof(TD.Integer))]
+        public int BracingLevels
+        {
+            get { return _bracingLevels; }
+            set
+            {
+                int normalized = value == int.MinValue || value < 1 ? 3 : value;
+                _bracingLevels = normalized;
+                _towerModel.Bracing.BracingLevels = normalized;
+                OnPropertyChanged(nameof(BracingLevels));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+        [StructuresDialog("topoffset", typeof(TD.Double))]
+        public double TopOffset
+        {
+            get { return _topOffset; }
+            set
+            {
+                double normalized = value == double.MinValue || value < 0.0 ? 100.0 : value;
+                _topOffset = normalized;
+                _towerModel.Bracing.TopOffset = normalized;
+                OnPropertyChanged(nameof(TopOffset));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("bottomoffset", typeof(TD.Double))]
+        public double BottomOffset
+        {
+            get { return _bottomOffset; }
+            set
+            {
+                double normalized = value == double.MinValue || value < 0.0 ? 100.0 : value;
+                _bottomOffset = normalized;
+                _towerModel.Bracing.BottomOffset = normalized;
+                OnPropertyChanged(nameof(BottomOffset));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        public bool IsConicalVerticalSelected
+        {
+            get { return _cageType == 2; }
+        }
+
+        public bool IsBracingEnabled
+        {
+            get { return _bracingType != 0; }
+        }
+
+        public TowerModel Tower
+        {
+            get { return _towerModel; }
+            set { _towerModel = value; }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}

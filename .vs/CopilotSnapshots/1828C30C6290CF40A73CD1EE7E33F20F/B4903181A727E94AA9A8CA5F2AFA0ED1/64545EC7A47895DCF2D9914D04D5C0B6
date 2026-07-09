@@ -1,0 +1,90 @@
+﻿using RambollTowerGenerator.Models;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Tekla.Structures.Drawing;
+using Tekla.Structures.Geometry3d;
+using Tekla.Structures.Model;
+using Tekla.Structures.Model.Operations;
+using Tekla.Structures.Model.UI;
+using Tekla.Structures.Plugins;
+using System.Windows.Forms;
+using RambollTowerGenerator.Builders;
+
+namespace RambollTowerGenerator
+{
+
+    [Plugin("TowerGenerator")]
+    [PluginUserInterface("RambollTowerGenerator.Views.MainWindow")]
+    public class TowerPlugin : PluginBase
+    {
+        private string _Profile = string.Empty;
+        private string _Material = string.Empty;
+        private Model _Model;
+        private TowerPluginData _Data;
+
+        public Model Model { 
+            get 
+            { return _Model; 
+            } 
+            set 
+            { _Model = value; }
+        }
+        public TowerPluginData Data 
+        { 
+            get 
+            { 
+                return _Data; 
+            } 
+            set 
+            { 
+                _Data = value;
+            }
+        }
+        public TowerPlugin(TowerPluginData data) 
+        {
+            Model = new Model();
+            Data = data;
+        }
+        public override List<InputDefinition> DefineInput()
+        {
+            var inputs = new List<InputDefinition>();
+            var picker = new Tekla.Structures.Model.UI.Picker();
+            Point basePoint = picker.PickPoint("Pick tower base center point");
+            inputs.Add(new InputDefinition(basePoint));
+            return inputs;
+        }
+
+        public override bool Run(List<InputDefinition> Input)
+        {
+            try
+            {
+                GetValuesFromDialog();
+
+                Point basePoint = (Point)Input[0].GetInput();
+
+                var legBuilder = new LegBuilder();
+                legBuilder.CreateLegs(Model, basePoint, Data.TowerType, _Profile, _Material);
+            }
+            catch (Exception Exc)
+            {
+                MessageBox.Show(Exc.ToString());
+            }
+
+            return true;
+        }
+
+        private void GetValuesFromDialog()
+        {
+            _Profile = Data.profile;
+            _Material = Data.material;
+
+
+            if (IsDefaultValue(_Profile))
+                _Profile = "HEA200";
+            if (IsDefaultValue(_Material))
+                _Material = "STEEL_UNDEFINED";
+
+        }
+    }
+}

@@ -1,0 +1,51 @@
+﻿using RambollTowerGenerator.Models;
+using System.ComponentModel;
+using TD = Tekla.Structures.Datatype;
+using Tekla.Structures.Dialog;
+
+namespace RambollTowerGenerator.ViewModels
+{
+    public class MainViewModel : INotifyPropertyChanged
+    {
+      private TowerModel _towerModel;
+        private int _towerType = 0;
+        private string profile = string.Empty;
+        private string material = string.Empty;
+
+        public MainViewModel()
+        {
+            _towerModel = new TowerModel();
+        }
+
+        [StructuresDialog("towerType", typeof(TD.Integer))]
+        public int TowerType
+        {
+            get {return _towerType; }
+            set { _towerType = value;OnPropertyChanged(nameof(TowerType));}
+        }
+        [StructuresDialog("profile", typeof(TD.String))]
+        public string Profilename
+        {
+            get { return profile; }
+            set { profile = value; OnPropertyChanged("Profilename"); }
+        }
+        [StructuresDialog("material", typeof(TD.String))]
+        public string Material
+        {
+            get { return material; }
+            set { material = value; OnPropertyChanged("Material"); }
+        }
+        public TowerModel Tower
+        {
+            get { return _towerModel; }
+            set { _towerModel = value; }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}

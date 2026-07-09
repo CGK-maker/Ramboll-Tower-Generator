@@ -1,0 +1,17 @@
+﻿using RambollTowerGenerator.Common;
+
+namespace RambollTowerGenerator.Models
+{
+    public class BracingModel
+    {
+        public BracingType BracingType { get; set; } = BracingType.XBracing;
+
+        public string DiagonalProfile { get; set; } = "BLL100*100*5";
+        public string DiagonalMaterial { get; set; } = "STEEL_UNDEFINED";
+
+        public string HorizontalProfile { get; set; } = "BLL100*100*5";
+        public string HorizontalMaterial { get; set; } = "STEEL_UNDEFINED";
+
+        public int BracingLevels { get; set; } = 3;
+    }
+}

@@ -1,0 +1,139 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+using Tekla.Structures.Geometry3d;
+using Tekla.Structures.Model;
+using Tekla.Structures.Model.Operations;
+using Tekla.Structures.Model.UI;
+using Tekla.Structures.Plugins;
+
+namespace RambollTowerGenerator
+{
+    [Plugin("TowerGenerator")]
+    [PluginUserInterface("RambollTowerGenerator.Views.MainWindow")]
+    public class TowerPlugin : PluginBase
+    {
+        private string _PartName = string.Empty;
+        private string _Profile = string.Empty;
+        private string _Material = string.Empty;
+        private Model _Model;
+        private TowerPluginData _Data;
+
+        public Model Model
+        {
+            get { return _Model; }
+            set { _Model = value; }
+        }
+
+        public TowerPluginData Data
+        {
+            get { return _Data; }
+            set { _Data = value; }
+        }
+
+        public TowerPlugin(TowerPluginData data)
+        {
+            Model = new Model();
+            Data = data;
+        }
+
+        public override List<InputDefinition> DefineInput()
+        {
+            var pointList = new List<InputDefinition>();
+            var picker = new Picker();
+            var basePoint = picker.PickPoint("Pick tower base center point");
+            pointList.Add(new InputDefinition(basePoint));
+            return pointList;
+        }
+
+        public override bool Run(List<InputDefinition> Input)
+        {
+            try
+            {
+                GetValuesFromDialog();
+
+                var basePoint = (Point)Input[0].GetInput();
+                CreateLegs(basePoint);
+
+                Operation.DisplayPrompt("Tower legs created. Type: " + Data.TowerType);
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show(exc.ToString());
+                return false;
+            }
+
+            return true;
+        }
+
+        private void CreateLegs(Point basePoint)
+        {
+            int legCount = Data.TowerType == 0 ? 3 : 4;
+            int segmentCount = 6;
+            double totalHeight = 30000.0;
+            double baseRadius = 2500.0;
+            double topRadius = 1200.0;
+
+            List<List<Point>> legNodes = BuildLegNodes(basePoint, legCount, segmentCount, totalHeight, baseRadius, topRadius);
+
+            for (int legIndex = 0; legIndex < legCount; legIndex++)
+            {
+                for (int segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++)
+                {
+                    Point startPoint = legNodes[legIndex][segmentIndex];
+                    Point endPoint = legNodes[legIndex][segmentIndex + 1];
+
+                    Beam legBeam = new Beam(startPoint, endPoint);
+                    legBeam.Name = _PartName;
+                    legBeam.Profile.ProfileString = _Profile;
+                    legBeam.Material.MaterialString = _Material;
+                    legBeam.SetLabel("LEG_" + legIndex + "_" + segmentIndex);
+                    legBeam.Insert();
+                }
+            }
+
+            Model.CommitChanges();
+        }
+
+        private List<List<Point>> BuildLegNodes(Point basePoint, int legCount, int segmentCount, double totalHeight, double baseRadius, double topRadius)
+        {
+            var nodesPerLeg = new List<List<Point>>();
+            double angleStep = (2.0 * Math.PI) / legCount;
+
+            for (int legIndex = 0; legIndex < legCount; legIndex++)
+            {
+                double angle = legIndex * angleStep;
+                var legNodes = new List<Point>();
+
+                for (int i = 0; i <= segmentCount; i++)
+                {
+                    double t = (double)i / segmentCount;
+                    double z = basePoint.Z + t * totalHeight;
+                    double radius = baseRadius + t * (topRadius - baseRadius);
+
+                    double x = basePoint.X + radius * Math.Cos(angle);
+                    double y = basePoint.Y + radius * Math.Sin(angle);
+
+                    legNodes.Add(new Point(x, y, z));
+                }
+
+                nodesPerLeg.Add(legNodes);
+            }
+
+            return nodesPerLeg;
+        }
+
+        private void GetValuesFromDialog()
+        {
+            _Profile = Data.profile;
+            _Material = Data.material;
+
+            if (IsDefaultValue(_PartName))
+                _PartName = "TOWER_LEG";
+            if (IsDefaultValue(_Profile))
+                _Profile = "HEA200";
+            if (IsDefaultValue(_Material))
+                _Material = "STEEL_UNDEFINED";
+        }
+    }
+}

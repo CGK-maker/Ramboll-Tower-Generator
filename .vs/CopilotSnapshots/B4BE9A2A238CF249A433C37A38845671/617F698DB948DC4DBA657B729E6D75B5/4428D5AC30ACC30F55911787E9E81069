@@ -1,0 +1,61 @@
+﻿using Tekla.Structures.Plugins;
+
+namespace RambollTowerGenerator.Models
+{
+    public class TowerPluginData
+    {
+        [StructuresField("towertype")]
+        public int TowerType = 0;
+
+        [StructuresField("profile")]
+        public string profile = "BLL100*100*5";
+
+        [StructuresField("material")]
+        public string material = "STEEL_UNDEFINED";
+
+        [StructuresField("basewidth")]
+        public double basewidth = 5000.0;
+
+        [StructuresField("topwidth")]
+        public double topwidth = 2400.0;
+
+        [StructuresField("segmentcount")]
+        public int segmentcount = 6;
+
+        [StructuresField("totalheight")]
+        public double totalheight = 30000.0;
+
+        [StructuresField("cagetype")]
+        public int cagetype = 0;
+
+        [StructuresField("verticalheight")]
+        public double verticalheight = 0.0;
+
+        [StructuresField("vertsegcnt")]
+        public int verticalsegmentcount = 2;
+
+        [StructuresField("bracingtype")]
+        public int bracingtype = 1;
+
+        [StructuresField("diagprofile")]
+        public string diagprofile = "BLL100*100*5";
+
+        [StructuresField("diagmaterial")]
+        public string diagmaterial = "STEEL_UNDEFINED";
+
+        [StructuresField("horizprofile")]
+        public string horizprofile = "BLL100*100*5";
+
+        [StructuresField("horizmaterial")]
+        public string horizmaterial = "STEEL_UNDEFINED";
+
+        [StructuresField("bracinglevels")]
+        public int bracinglevels = 3;
+
+        [StructuresField("topoffset")]
+        public double topoffset = 100.0;
+
+        [StructuresField("bottomoffset")]
+        public double bottomoffset = 100.0;
+    }
+}

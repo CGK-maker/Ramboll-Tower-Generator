@@ -1,0 +1,142 @@
+﻿using System;
+using System.Collections.Generic;
+using RambollTowerGenerator.Common;
+using RambollTowerGenerator.Models;
+using Tekla.Structures.Geometry3d;
+
+namespace RambollTowerGenerator.Builders
+{
+    public class CageLegGeometryBuilder
+    {
+        public List<List<Point>> BuildLegNodes(TowerModel tower)
+        {
+            switch (tower.Cage.CageType)
+            {
+                case CageType.Vertical:
+                    return BuildVerticalLegNodes(
+                        tower.BasePoint,
+                        tower.LegCount,
+                        tower.Geometry.SegmentCount,
+                        tower.Geometry.TotalHeight,
+                        tower.Geometry.BaseWidth);
+
+                case CageType.ConicalVertical:
+                    return BuildConicalVerticalLegNodes(tower);
+
+                default:
+                    return BuildConicalLegNodes(
+                        tower.BasePoint,
+                        tower.LegCount,
+                        tower.Geometry.SegmentCount,
+                        tower.Geometry.TotalHeight,
+                        tower.Geometry.BaseWidth,
+                        tower.Geometry.TopWidth);
+            }
+        }
+
+        private List<List<Point>> BuildConicalLegNodes(Point basePoint, int legCount, int segmentCount, double totalHeight, double baseWidth, double topWidth)
+        {
+            var result = new List<List<Point>>();
+            double angleStep = (2.0 * Math.PI) / legCount;
+            int safeSegments = Math.Max(1, segmentCount);
+
+            for (int legIndex = 0; legIndex < legCount; legIndex++)
+            {
+                double angle = legIndex * angleStep;
+                var nodes = new List<Point>();
+
+                for (int i = 0; i <= safeSegments; i++)
+                {
+                    double t = (double)i / safeSegments;
+                    double z = basePoint.Z + (t * totalHeight);
+                    double width = baseWidth + t * (topWidth - baseWidth);
+                    AddNode(nodes, basePoint, angle, width, z);
+                }
+
+                result.Add(nodes);
+            }
+
+            return result;
+        }
+
+        private List<List<Point>> BuildVerticalLegNodes(Point basePoint, int legCount, int segmentCount, double totalHeight, double width)
+        {
+            var result = new List<List<Point>>();
+            double angleStep = (2.0 * Math.PI) / legCount;
+            int safeSegments = Math.Max(1, segmentCount);
+
+            for (int legIndex = 0; legIndex < legCount; legIndex++)
+            {
+                double angle = legIndex * angleStep;
+                var nodes = new List<Point>();
+
+                for (int i = 0; i <= safeSegments; i++)
+                {
+                    double t = (double)i / safeSegments;
+                    double z = basePoint.Z + (t * totalHeight);
+                    AddNode(nodes, basePoint, angle, width, z);
+                }
+
+                result.Add(nodes);
+            }
+
+            return result;
+        }
+
+        private List<List<Point>> BuildConicalVerticalLegNodes(TowerModel tower)
+        {
+            var result = new List<List<Point>>();
+            double angleStep = (2.0 * Math.PI) / tower.LegCount;
+
+            double safeTotalHeight = Math.Max(1.0, tower.Geometry.TotalHeight);
+            double verticalHeight = Math.Min(Math.Max(0.0, tower.Cage.VerticalHeight), safeTotalHeight);
+            double conicalHeight = safeTotalHeight - verticalHeight;
+
+            int conicalSegments = conicalHeight > 0.0 ? Math.Max(1, tower.Geometry.SegmentCount) : 0;
+            int verticalSegments = verticalHeight > 0.0 ? Math.Max(1, tower.Cage.VerticalSegmentCount) : 0;
+
+            for (int legIndex = 0; legIndex < tower.LegCount; legIndex++)
+            {
+                double angle = legIndex * angleStep;
+                var nodes = new List<Point>();
+
+                if (conicalSegments > 0)
+                {
+                    for (int i = 0; i <= conicalSegments; i++)
+                    {
+                        double t = (double)i / conicalSegments;
+                        double z = tower.BasePoint.Z + (t * conicalHeight);
+                        double width = tower.Geometry.BaseWidth + t * (tower.Geometry.TopWidth - tower.Geometry.BaseWidth);
+                        AddNode(nodes, tower.BasePoint, angle, width, z);
+                    }
+                }
+                else
+                {
+                    AddNode(nodes, tower.BasePoint, angle, tower.Geometry.TopWidth, tower.BasePoint.Z);
+                }
+
+                if (verticalSegments > 0)
+                {
+                    for (int i = 1; i <= verticalSegments; i++)
+                    {
+                        double t = (double)i / verticalSegments;
+                        double z = tower.BasePoint.Z + conicalHeight + (t * verticalHeight);
+                        AddNode(nodes, tower.BasePoint, angle, tower.Geometry.TopWidth, z);
+                    }
+                }
+
+                result.Add(nodes);
+            }
+
+            return result;
+        }
+
+        private void AddNode(List<Point> nodes, Point basePoint, double angle, double width, double z)
+        {
+            double legOffset = width * 0.5;
+            double x = basePoint.X + legOffset * Math.Cos(angle);
+            double y = basePoint.Y + legOffset * Math.Sin(angle);
+            nodes.Add(new Point(x, y, z));
+        }
+    }
+}

@@ -1,0 +1,358 @@
+﻿<tsd:PluginWindowBase
+    x:Class="RambollTowerGenerator.Views.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:tsd="clr-namespace:Tekla.Structures.Dialog;assembly=Tekla.Structures.Dialog"
+    xmlns:UIControls="clr-namespace:Tekla.Structures.Dialog.UIControls;assembly=Tekla.Structures.Dialog"
+    Title="Ramboll Tower Generator"
+    Width="800"
+    Height="600"
+    WindowStyle="None"
+    AllowsTransparency="True"
+    Background="Transparent">
+
+    <Grid>
+        <Border CornerRadius="15"
+                Background="White"
+                BorderBrush="#CCCCCC"
+                BorderThickness="1">
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="20"
+                                  ShadowDepth="5"
+                                  Opacity="0.3"
+                                  Color="Black" />
+            </Border.Effect>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="60" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- Custom blue title bar -->
+                <Border Grid.Row="0"
+                        Background="#0078D4"
+                        CornerRadius="15,15,0,0"
+                        MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="40" />
+                            <ColumnDefinition Width="40" />
+                            <ColumnDefinition Width="40" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Ramboll Tower Generator"
+                                   FontSize="22"
+                                   FontWeight="Bold"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"
+                                   Margin="16,0,0,0" />
+
+                        <Button Grid.Column="1"
+                                Content="—"
+                                FontSize="16"
+                                Background="Transparent"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Click="MinimizeButton_Click" />
+
+                        <Button Grid.Column="2"
+                                Content="□"
+                                FontSize="20"
+                                Background="Transparent"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Click="MaximizeRestoreButton_Click" />
+
+                        <Button Grid.Column="3"
+                                Content="✕"
+                                FontSize="16"
+                                Background="Transparent"
+                                Foreground="White"
+                                BorderThickness="0"
+                                Cursor="Hand"
+                                Click="CloseButton_Click" />
+                    </Grid>
+                </Border>
+
+                <!-- Main content -->
+                <Grid Grid.Row="1" Margin="10,10,10,0">
+                    <TabControl SelectedIndex="2">
+                        <TabItem Header="Picture">
+                            <Grid Margin="10">
+                                <TextBlock Text="Picture content goes here."
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#666666" />
+                            </Grid>
+                        </TabItem>
+
+                        <TabItem Header="Part">
+                            <Grid Margin="10">
+                                <TextBlock Text="Part content goes here."
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#666666" />
+                            </Grid>
+                        </TabItem>
+
+                        <TabItem Header="Leg Parameters">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel Margin="10">
+                                    <GroupBox Header="Tower Configuration"
+                                              Margin="0,0,0,10"
+                                              FontSize="14"
+                                              FontWeight="SemiBold" Width="736">
+                                        <StackPanel Margin="10">
+                                            <Grid Margin="0,0,0,10">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="30" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0">
+                                                    <Label Content="Tower Type"
+                                                           Height="28"
+                                                           FontSize="13" />
+                                                    <ComboBox Width="200"
+                                                              Height="30"
+                                                              HorizontalAlignment="Left"
+                                                              SelectedIndex="{Binding TowerType, Mode=TwoWay}"
+                                                              FontSize="13">
+                                                        <ComboBoxItem Content="3 Leg Tower" />
+                                                        <ComboBoxItem Content="4 Leg Tower" />
+                                                    </ComboBox>
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="2">
+                                                    <Label Content="Cage Type"
+                                                           Height="28"
+                                                           FontSize="13" />
+                                                    <ComboBox Width="220"
+                                                              Height="30"
+                                                              HorizontalAlignment="Left"
+                                                              SelectedIndex="{Binding CageType, Mode=TwoWay}">
+                                                        <ComboBoxItem Content="Conical" />
+                                                        <ComboBoxItem Content="Vertical" />
+                                                        <ComboBoxItem Content="Conical + Vertical" />
+                                                    </ComboBox>
+
+                                                    <StackPanel Margin="0,8,0,0">
+                                                        <StackPanel.Style>
+                                                            <Style TargetType="StackPanel">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsConicalVerticalSelected}" Value="True">
+                                                                        <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </StackPanel.Style>
+
+                                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                            <Label Width="120" Height="30" Content="Vertical Height" />
+                                                            <TextBox Width="120"
+                                                                     Height="23"
+                                                                     VerticalAlignment="Center"
+                                                                     Text="{Binding VerticalHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                        </StackPanel>
+
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Label Width="120" Height="30" Content="Vertical Segments" />
+                                                            <TextBox Width="120"
+                                                                     Height="23"
+                                                                     VerticalAlignment="Center"
+                                                                     Text="{Binding VerticalSegmentCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                                        </StackPanel>
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                <Label Width="120" Height="30" Content="Base Width" />
+                                                <TextBox Width="120"
+                                                         Height="23"
+                                                         VerticalAlignment="Center"
+                                                         Text="{Binding BaseWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                <Label Width="120" Height="30" Content="Top Width" />
+                                                <TextBox Width="120"
+                                                         Height="23"
+                                                         VerticalAlignment="Center"
+                                                         Text="{Binding TopWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                                                <Label Width="120" Height="30" Content="Segments" />
+                                                <TextBox Width="120"
+                                                         Height="23"
+                                                         VerticalAlignment="Center"
+                                                         Text="{Binding SegmentCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                                <Label Width="120" Height="30" Content="Total Height" />
+                                                <TextBox Width="120"
+                                                         Height="23"
+                                                         VerticalAlignment="Center"
+                                                         Text="{Binding TotalHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                            </StackPanel>
+
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label
+                                                    x:Name="label_Copy"
+                                                    Width="100"
+                                                    Height="30"
+                                                    Content="Profile" />
+                                                <UIControls:WpfFilterCheckBox VerticalAlignment="Center" AttributeName="profile" />
+                                                <TextBox
+                                                    x:Name="textBox_Copy"
+                                                    Width="120"
+                                                    Height="23"
+                                                    VerticalAlignment="Center"
+                                                    Text="{Binding Profilename, Mode=TwoWay}"
+                                                    TextWrapping="Wrap" />
+                                                <UIControls:WpfProfileCatalog
+                                                    x:Name="profileCatalog"
+                                                    VerticalAlignment="Center"
+                                                    SelectClicked="profileCatalog_SelectClicked"
+                                                    SelectionDone="profileCatalog_SelectionDone" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Label
+                                                    x:Name="label_Material"
+                                                    Width="100"
+                                                    Height="30"
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    Content="Material" />
+                                                <UIControls:WpfFilterCheckBox
+                                                    HorizontalAlignment="Left"
+                                                    VerticalAlignment="Center"
+                                                    AttributeName="material" />
+                                                <TextBox
+                                                    x:Name="materialBox"
+                                                    Width="120"
+                                                    Height="23"
+                                                    VerticalAlignment="Center"
+                                                    Text="{Binding Material, Mode=TwoWay}"
+                                                    TextWrapping="Wrap" />
+                                                <UIControls:WpfMaterialCatalog
+                                                    x:Name="materialCatalog"
+                                                    VerticalAlignment="Center"
+                                                    BorderThickness="0"
+                                                    FontSize="6"
+                                                    SelectClicked="WPFMaterialCatalog_SelectClicked"
+                                                    SelectionDone="WPFMaterialCatalog_SelectionDone" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </GroupBox>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </TabItem>
+
+                        <TabItem Header="Tower Parameters">
+                            <Grid Margin="10">
+                                <TextBlock Text="Tower Parameters content goes here."
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#666666" />
+                            </Grid>
+                        </TabItem>
+
+                        <TabItem Header="Twin Profiles">
+                            <Grid Margin="10">
+                                <TextBlock Text="Twin Profiles content goes here."
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#666666" />
+                            </Grid>
+                        </TabItem>
+
+                        <TabItem Header="Model Points">
+                            <Grid Margin="10">
+                                <TextBlock Text="Model Points content goes here."
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#666666" />
+                            </Grid>
+                        </TabItem>
+
+                        <TabItem Header="Joints">
+                            <Grid Margin="10">
+                                <TextBlock Text="Joints content goes here."
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           Foreground="#666666" />
+                            </Grid>
+                        </TabItem>
+                    </TabControl>
+                </Grid>
+
+                <!-- Bottom Tekla buttons -->
+                <Border Grid.Row="2"
+                        Background="#F5F5F5"
+                        CornerRadius="0,0,15,15"
+                        Padding="10">
+                    <UIControls:WpfOkApplyModifyGetOnOffCancel
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Width="760"
+                        ApplyClicked="WPFOkApplyModifyGetOnOffCancel_ApplyClicked"
+                        CancelClicked="WPFOkApplyModifyGetOnOffCancel_CancelClicked"
+                        GetClicked="WPFOkApplyModifyGetOnOffCancel_GetClicked"
+                        ModifyClicked="WPFOkApplyModifyGetOnOffCancel_ModifyClicked"
+                        OkClicked="WPFOkApplyModifyGetOnOffCancel_OkClicked"
+                        OnOffClicked="WPFOkApplyModifyGetOnOffCancel_OnOffClicked">
+                        <UIControls:WpfOkApplyModifyGetOnOffCancel.Resources>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="#0078D4" />
+                                <Setter Property="Foreground" Value="White" />
+                                <Setter Property="FontSize" Value="13" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                                <Setter Property="Padding" Value="15,8" />
+                                <Setter Property="Margin" Value="5,0" />
+                                <Setter Property="MinWidth" Value="80" />
+                                <Setter Property="MinHeight" Value="32" />
+                                <Setter Property="BorderThickness" Value="0" />
+                                <Setter Property="Cursor" Value="Hand" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="5"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <ContentPresenter HorizontalAlignment="Center"
+                                                                  VerticalAlignment="Center" />
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#005A9E" />
+                                    </Trigger>
+                                    <Trigger Property="IsPressed" Value="True">
+                                        <Setter Property="Background" Value="#004578" />
+                                    </Trigger>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Background" Value="#CCCCCC" />
+                                        <Setter Property="Foreground" Value="#666666" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </UIControls:WpfOkApplyModifyGetOnOffCancel.Resources>
+                    </UIControls:WpfOkApplyModifyGetOnOffCancel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</tsd:PluginWindowBase>

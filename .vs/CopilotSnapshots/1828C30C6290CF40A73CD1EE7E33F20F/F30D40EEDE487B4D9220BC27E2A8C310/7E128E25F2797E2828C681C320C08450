@@ -1,0 +1,70 @@
+﻿using System;
+using System.Collections.Generic;
+using RambollTowerGenerator.Models;
+using Tekla.Structures.Geometry3d;
+using Tekla.Structures.Model;
+
+namespace RambollTowerGenerator.Builders
+{
+    public class LegBuilder
+    {
+        public void CreateLegs(Model model, TowerModel tower)
+        {
+            List<List<Point>> legNodes = BuildLegNodes(
+                tower.BasePoint,
+                tower.LegCount,
+                tower.Geometry.SegmentCount,
+                tower.Geometry.TotalHeight,
+                tower.Geometry.BaseWidth,
+                tower.Geometry.TopWidth);
+
+            for (int legIndex = 0; legIndex < tower.LegCount; legIndex++)
+            {
+                for (int i = 0; i < tower.Geometry.SegmentCount; i++)
+                {
+                    Point start = legNodes[legIndex][i];
+                    Point end = legNodes[legIndex][i + 1];
+
+                    Beam leg = new Beam(start, end);
+                    leg.Name = "TOWER_LEG";
+                    leg.Profile.ProfileString = string.IsNullOrWhiteSpace(tower.Profile.LegProfile) ? "HEA200" : tower.Profile.LegProfile;
+                    leg.Material.MaterialString = string.IsNullOrWhiteSpace(tower.Profile.LegMaterial) ? "STEEL_UNDEFINED" : tower.Profile.LegMaterial;
+                    leg.Class = "3";
+                    leg.SetLabel("LEG_" + legIndex + "_" + i);
+                    leg.Insert();
+                }
+            }
+
+            model.CommitChanges();
+        }
+
+        private List<List<Point>> BuildLegNodes(Point basePoint, int legCount, int segmentCount, double totalHeight, double baseWidth, double topWidth)
+        {
+            var result = new List<List<Point>>();
+            double angleStep = (2.0 * Math.PI) / legCount;
+
+            for (int legIndex = 0; legIndex < legCount; legIndex++)
+            {
+                double angle = legIndex * angleStep;
+                var nodes = new List<Point>();
+
+                for (int i = 0; i <= segmentCount; i++)
+                {
+                    double t = (double)i / segmentCount;
+                    double z = basePoint.Z + (t * totalHeight);
+                    double width = baseWidth + t * (topWidth - baseWidth);
+                    double legOffset = width * 0.5;
+
+                    double x = basePoint.X + legOffset * Math.Cos(angle);
+                    double y = basePoint.Y + legOffset * Math.Sin(angle);
+
+                    nodes.Add(new Point(x, y, z));
+                }
+
+                result.Add(nodes);
+            }
+
+            return result;
+        }
+    }
+}

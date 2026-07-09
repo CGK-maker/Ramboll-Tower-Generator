@@ -1,0 +1,83 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Windows.Forms;
+using RambollTowerGenerator.Builders;
+using RambollTowerGenerator.Common;
+using RambollTowerGenerator.Models;
+using Tekla.Structures.Geometry3d;
+using Tekla.Structures.Model;
+using Tekla.Structures.Model.UI;
+using Tekla.Structures.Plugins;
+
+namespace RambollTowerGenerator
+{
+    [Plugin("TowerGenerator")]
+    [PluginUserInterface("RambollTowerGenerator.Views.MainWindow")]
+    public class TowerPlugin : PluginBase
+    {
+        private Model _Model;
+        private TowerPluginData _Data;
+
+        public Model Model
+        {
+            get { return _Model; }
+            set { _Model = value; }
+        }
+
+        public TowerPluginData Data
+        {
+            get { return _Data; }
+            set { _Data = value; }
+        }
+
+        public TowerPlugin(TowerPluginData data)
+        {
+            Model = new Model();
+            Data = data;
+        }
+
+        public override List<InputDefinition> DefineInput()
+        {
+            var inputs = new List<InputDefinition>();
+            var picker = new Picker();
+            Point basePoint = picker.PickPoint("Pick tower base center point");
+            inputs.Add(new InputDefinition(basePoint));
+            return inputs;
+        }
+
+        public override bool Run(List<InputDefinition> Input)
+        {
+            try
+            {
+                Point basePoint = (Point)Input[0].GetInput();
+                TowerModel tower = BuildTowerModel(basePoint);
+
+                var legBuilder = new LegBuilder();
+                legBuilder.CreateLegs(Model, tower);
+            }
+            catch (Exception exc)
+            {
+                MessageBox.Show(exc.ToString());
+                return false;
+            }
+
+            return true;
+        }
+
+        private TowerModel BuildTowerModel(Point basePoint)
+        {
+            var tower = new TowerModel();
+            tower.BasePoint = basePoint;
+            tower.TowerType = Data.TowerType == 0 ? TowerType.ThreeLeg : TowerType.FourLeg;
+            tower.Profile.LegProfile = IsDefaultValue(Data.profile) ? "HEA200" : Data.profile;
+            tower.Profile.LegMaterial = IsDefaultValue(Data.material) ? "STEEL_UNDEFINED" : Data.material;
+
+            tower.Geometry.BaseWidth = IsDefaultValue(Data.basewidth) || Data.basewidth <= 0 ? 5000.0 : Data.basewidth;
+            tower.Geometry.TopWidth = IsDefaultValue(Data.topwidth) || Data.topwidth <= 0 ? 2400.0 : Data.topwidth;
+            tower.Geometry.SegmentCount = IsDefaultValue(Data.segmentcount) || Data.segmentcount < 1 ? 6 : Data.segmentcount;
+            tower.Geometry.TotalHeight = IsDefaultValue(Data.totalheight) || Data.totalheight <= 0 ? 30000.0 : Data.totalheight;
+
+            return tower;
+        }
+    }
+}

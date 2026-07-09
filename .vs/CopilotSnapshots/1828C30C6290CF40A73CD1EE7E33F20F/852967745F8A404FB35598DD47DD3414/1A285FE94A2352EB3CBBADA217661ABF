@@ -1,0 +1,184 @@
+﻿using System.ComponentModel;
+using RambollTowerGenerator.Common;
+using RambollTowerGenerator.Models;
+using TD = Tekla.Structures.Datatype;
+using Tekla.Structures.Dialog;
+
+namespace RambollTowerGenerator.ViewModels
+{
+    public class MainViewModel : INotifyPropertyChanged
+    {
+        private TowerModel _towerModel;
+        private int _towerType = 0;
+        private string profile = string.Empty;
+        private string material = string.Empty;
+        private double _baseWidth = 5000.0;
+        private double _topWidth = 2400.0;
+        private int _segmentCount = 6;
+        private double _totalHeight = 30000.0;
+        private int _cageType = 0;
+        private double _verticalHeight = 0.0;
+        private int _verticalSegmentCount = 2;
+
+        public MainViewModel()
+        {
+            _towerModel = new TowerModel();
+            _towerModel.Geometry.BaseWidth = _baseWidth;
+            _towerModel.Geometry.TopWidth = _topWidth;
+            _towerModel.Geometry.SegmentCount = _segmentCount;
+            _towerModel.Geometry.TotalHeight = _totalHeight;
+            _towerModel.Cage.CageType = Common.CageType.Conical;
+            _towerModel.Cage.VerticalHeight = _verticalHeight;
+            _towerModel.Cage.VerticalSegmentCount = _verticalSegmentCount;
+        }
+
+        [StructuresDialog("towertype", typeof(TD.Integer))]
+        public int TowerType
+        {
+            get { return _towerType; }
+            set
+            {
+                _towerType = value;
+                _towerModel.TowerType = value == 0 ? Common.TowerType.ThreeLeg : Common.TowerType.FourLeg;
+                OnPropertyChanged(nameof(TowerType));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("profile", typeof(TD.String))]
+        public string Profilename
+        {
+            get { return profile; }
+            set
+            {
+                profile = value;
+                _towerModel.Profile.LegProfile = value;
+                OnPropertyChanged(nameof(Profilename));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("material", typeof(TD.String))]
+        public string Material
+        {
+            get { return material; }
+            set
+            {
+                material = value;
+                _towerModel.Profile.LegMaterial = value;
+                OnPropertyChanged(nameof(Material));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("basewidth", typeof(TD.Double))]
+        public double BaseWidth
+        {
+            get { return _baseWidth; }
+            set
+            {
+                _baseWidth = value;
+                _towerModel.Geometry.BaseWidth = value;
+                OnPropertyChanged(nameof(BaseWidth));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("topwidth", typeof(TD.Double))]
+        public double TopWidth
+        {
+            get { return _topWidth; }
+            set
+            {
+                _topWidth = value;
+                _towerModel.Geometry.TopWidth = value;
+                OnPropertyChanged(nameof(TopWidth));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("segmentcount", typeof(TD.Integer))]
+        public int SegmentCount
+        {
+            get { return _segmentCount; }
+            set
+            {
+                _segmentCount = value;
+                _towerModel.Geometry.SegmentCount = value;
+                OnPropertyChanged(nameof(SegmentCount));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("totalheight", typeof(TD.Double))]
+        public double TotalHeight
+        {
+            get { return _totalHeight; }
+            set
+            {
+                _totalHeight = value;
+                _towerModel.Geometry.TotalHeight = value;
+                OnPropertyChanged(nameof(TotalHeight));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("cagetype", typeof(TD.Integer))]
+        public int CageType
+        {
+            get { return _cageType; }
+            set
+            {
+                _cageType = value;
+                _towerModel.Cage.CageType = value == 1 ? Common.CageType.Vertical : (value == 2 ? Common.CageType.ConicalVertical : Common.CageType.Conical);
+                OnPropertyChanged(nameof(CageType));
+                OnPropertyChanged(nameof(IsConicalVerticalSelected));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("verticalheight", typeof(TD.Double))]
+        public double VerticalHeight
+        {
+            get { return _verticalHeight; }
+            set
+            {
+                _verticalHeight = value;
+                _towerModel.Cage.VerticalHeight = value;
+                OnPropertyChanged(nameof(VerticalHeight));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("verticalsegmentcount", typeof(TD.Integer))]
+        public int VerticalSegmentCount
+        {
+            get { return _verticalSegmentCount; }
+            set
+            {
+                _verticalSegmentCount = value;
+                _towerModel.Cage.VerticalSegmentCount = value;
+                OnPropertyChanged(nameof(VerticalSegmentCount));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        public bool IsConicalVerticalSelected
+        {
+            get { return _cageType == 2; }
+        }
+
+        public TowerModel Tower
+        {
+            get { return _towerModel; }
+            set { _towerModel = value; }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}

@@ -1,0 +1,244 @@
+﻿using RambollTowerGenerator.Common;
+using RambollTowerGenerator.Models;
+using System;
+using System.Collections.Generic;
+using Tekla.Structures.Geometry3d;
+using Tekla.Structures.Model;
+
+namespace RambollTowerGenerator.Builders
+{
+    public class BracingBuilder
+    {
+        private readonly CageLegGeometryBuilder _geometryBuilder;
+        private const double TOLERANCE = 1.0; // 1mm tolerance for Z comparisons
+
+        public BracingBuilder()
+        {
+            _geometryBuilder = new CageLegGeometryBuilder();
+        }
+
+        public void CreateBracing(Model model, TowerModel tower)
+        {
+            if (tower.Bracing.BracingType == BracingType.None)
+                return;
+
+            List<List<Point>> legNodes = _geometryBuilder.BuildLegNodes(tower);
+
+            switch (tower.Bracing.BracingType)
+            {
+                case BracingType.XBracing:
+                    CreateXBracing(model, tower, legNodes);
+                    break;
+            }
+
+            model.CommitChanges();
+        }
+
+        private void CreateXBracing(Model model, TowerModel tower, List<List<Point>> legNodes)
+        {
+            int bracingLevels = tower.Bracing.BracingLevels;
+            int legCount = tower.LegCount;
+
+            if (bracingLevels < 1 || legNodes.Count == 0 || legNodes[0].Count < 2)
+                return;
+
+            double zStart = legNodes[0][0].Z;
+            double zEnd = legNodes[0][legNodes[0].Count - 1].Z;
+            double totalHeight = zEnd - zStart;
+
+            if (totalHeight <= 0.0)
+                return;
+
+            // Calculate height per X-bracing level without any gaps
+            double levelHeight = totalHeight / bracingLevels;
+
+            for (int level = 0; level < bracingLevels; level++)
+            {
+                // No gaps - each level starts exactly where the previous ended
+                double levelBottomZ = zStart + (level * levelHeight);
+                double levelTopZ = zStart + ((level + 1) * levelHeight);
+
+                // Clamp levelTopZ to not exceed zEnd (handle floating point precision)
+                if (levelTopZ > zEnd)
+                    levelTopZ = zEnd;
+
+                // Middle point for horizontal bracing (middle of each X-bracing)
+                double levelMidZ = levelBottomZ + (levelHeight / 2.0);
+
+                // Validate that all Z values are within the leg range
+                if (levelBottomZ > zEnd + TOLERANCE || levelMidZ > zEnd + TOLERANCE || levelTopZ > zEnd + TOLERANCE)
+                {
+                    // Skip this level if it's beyond the leg height
+                    continue;
+                }
+
+                for (int faceIndex = 0; faceIndex < legCount; faceIndex++)
+                {
+                    int leg1Index = faceIndex;
+                    int leg2Index = (faceIndex + 1) % legCount;
+
+                    Point bottomLeft = GetPointAtZ(legNodes[leg1Index], levelBottomZ);
+                    Point topLeft = GetPointAtZ(legNodes[leg1Index], levelTopZ);
+                    Point bottomRight = GetPointAtZ(legNodes[leg2Index], levelBottomZ);
+                    Point topRight = GetPointAtZ(legNodes[leg2Index], levelTopZ);
+
+                    // Verify points are valid (not all at the same location)
+                    if (ArePointsValid(bottomLeft, topLeft, bottomRight, topRight))
+                    {
+                        // Create X-bracing diagonals without any offset (no gaps)
+                        Beam diagonal1 = CreateBracingBeam(
+                            bottomLeft,
+                            topRight,
+                            tower.Bracing.DiagonalProfile,
+                            tower.Bracing.DiagonalMaterial,
+                            $"X_DIAG_L{level}_F{faceIndex}_1");
+                        diagonal1.Insert();
+
+                        Beam diagonal2 = CreateBracingBeam(
+                            bottomRight,
+                            topLeft,
+                            tower.Bracing.DiagonalProfile,
+                            tower.Bracing.DiagonalMaterial,
+                            $"X_DIAG_L{level}_F{faceIndex}_2");
+                        diagonal2.Insert();
+                    }
+                }
+
+                // Create horizontal bracing at the MIDDLE of each X-bracing
+                // Only if midZ is within valid range
+                if (levelMidZ <= zEnd + TOLERANCE)
+                {
+                    CreateHorizontalBracingRingAtZ(model, tower, legNodes, levelMidZ, level);
+                }
+            }
+        }
+
+        private bool ArePointsValid(Point p1, Point p2, Point p3, Point p4)
+        {
+            // Check that points are not all at the same location
+            double minDistance = 10.0; // Minimum 10mm between points
+
+            double dist1 = Distance(p1, p2);
+            double dist2 = Distance(p3, p4);
+            double dist3 = Distance(p1, p3);
+
+            return dist1 > minDistance && dist2 > minDistance && dist3 > minDistance;
+        }
+
+        private double Distance(Point p1, Point p2)
+        {
+            double dx = p2.X - p1.X;
+            double dy = p2.Y - p1.Y;
+            double dz = p2.Z - p1.Z;
+            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
+        }
+
+        private void CreateHorizontalBracingRingAtZ(
+            Model model,
+            TowerModel tower,
+            List<List<Point>> legNodes,
+            double z,
+            int level)
+        {
+            int legCount = tower.LegCount;
+
+            for (int faceIndex = 0; faceIndex < legCount; faceIndex++)
+            {
+                int leg1Index = faceIndex;
+                int leg2Index = (faceIndex + 1) % legCount;
+
+                Point p1 = GetPointAtZ(legNodes[leg1Index], z);
+                Point p2 = GetPointAtZ(legNodes[leg2Index], z);
+
+                // Verify points are far enough apart
+                if (Distance(p1, p2) > 10.0)
+                {
+                    Beam horizontal = CreateBracingBeam(
+                        p1,
+                        p2,
+                        tower.Bracing.HorizontalProfile,
+                        tower.Bracing.HorizontalMaterial,
+                        $"X_HORIZ_M{level}_F{faceIndex}");
+                    horizontal.Insert();
+                }
+            }
+        }
+
+        private Point GetPointAtZ(List<Point> legNodes, double targetZ)
+        {
+            if (legNodes.Count == 0)
+                return new Point(0, 0, 0);
+
+            // Handle edge cases with tolerance
+            if (targetZ <= legNodes[0].Z + TOLERANCE)
+                return new Point(legNodes[0].X, legNodes[0].Y, legNodes[0].Z);
+
+            int last = legNodes.Count - 1;
+            if (targetZ >= legNodes[last].Z - TOLERANCE)
+                return new Point(legNodes[last].X, legNodes[last].Y, legNodes[last].Z);
+
+            // Find the segment containing targetZ
+            for (int i = 0; i < legNodes.Count - 1; i++)
+            {
+                Point a = legNodes[i];
+                Point b = legNodes[i + 1];
+
+                if (targetZ >= a.Z - TOLERANCE && targetZ <= b.Z + TOLERANCE)
+                {
+                    double dz = b.Z - a.Z;
+                    if (Math.Abs(dz) < 0.001)
+                        return new Point(a.X, a.Y, targetZ);
+
+                    double t = (targetZ - a.Z) / dz;
+
+                    // Clamp t to [0, 1] to handle small floating point errors
+                    t = Math.Max(0.0, Math.Min(1.0, t));
+
+                    return new Point(
+                        a.X + ((b.X - a.X) * t),
+                        a.Y + ((b.Y - a.Y) * t),
+                        targetZ);
+                }
+            }
+
+            // Fallback to last point
+            return new Point(legNodes[last].X, legNodes[last].Y, legNodes[last].Z);
+        }
+
+        private Beam CreateBracingBeam(Point start, Point end, string profile, string material, string label)
+        {
+            Beam beam = new Beam(start, end);
+            beam.Profile.ProfileString = profile;
+            beam.Material.MaterialString = material;
+            beam.Name = "TOWER_BRACING";
+            beam.Class = "5";
+            beam.Position.Plane = Position.PlaneEnum.MIDDLE;
+            beam.Position.Depth = Position.DepthEnum.MIDDLE;
+            beam.Position.Rotation = Position.RotationEnum.FRONT;
+            beam.SetLabel(label);
+            return beam;
+        }
+
+        private Point ApplyVerticalOffset(Point fromPoint, Point towardPoint, double offset)
+        {
+            if (offset <= 0.0)
+                return fromPoint;
+
+            Vector direction = new Vector(
+                towardPoint.X - fromPoint.X,
+                towardPoint.Y - fromPoint.Y,
+                towardPoint.Z - fromPoint.Z);
+
+            double length = direction.GetLength();
+            if (length < 0.001)
+                return fromPoint;
+
+            direction = direction.GetNormal();
+
+            return new Point(
+                fromPoint.X + direction.X * offset,
+                fromPoint.Y + direction.Y * offset,
+                fromPoint.Z + direction.Z * offset);
+        }
+    }
+}

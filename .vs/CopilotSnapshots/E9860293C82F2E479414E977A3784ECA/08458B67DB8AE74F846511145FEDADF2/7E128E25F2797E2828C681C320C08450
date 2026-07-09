@@ -1,0 +1,103 @@
+﻿using System;
+using System.Collections.Generic;
+using RambollTowerGenerator.Models;
+using Tekla.Structures.Model;
+using Tekla.Structures.Geometry3d;
+
+namespace RambollTowerGenerator.Builders
+{
+    public class LegBuilder
+    {
+        private readonly CageLegGeometryBuilder _cageLegGeometryBuilder;
+
+        public LegBuilder()
+        {
+            _cageLegGeometryBuilder = new CageLegGeometryBuilder();
+        }
+
+        public void CreateLegs(Model model, TowerModel tower)
+        {
+            List<List<Point>> legNodes = _cageLegGeometryBuilder.BuildLegNodes(tower);
+
+            for (int legIndex = 0; legIndex < tower.LegCount; legIndex++)
+            {
+                List<Point> nodes = legNodes[legIndex];
+
+                for (int i = 0; i < nodes.Count - 1; i++)
+                {
+                    Point start = nodes[i];
+                    Point end = nodes[i + 1];
+
+                    Beam leg = new Beam(start, end);
+                    leg.Name = "TOWER_LEG";
+                    leg.Profile.ProfileString = tower.Profile.LegProfile;
+                    leg.Material.MaterialString = tower.Profile.LegMaterial;
+                    leg.Class = (i % 2 == 0) ? "2" : "3";
+
+                    // Check if segment is vertical (Tolerance of 0.1mm)
+                    bool isVertical = Math.Abs(start.X - end.X) < 0.1 && Math.Abs(start.Y - end.Y) < 0.1;
+
+                    if (isVertical)
+                    {
+                        // APPLY YOUR MANUAL ALIGNMENT VALUES
+                        ApplyCorrectedVerticalPosition(leg, legIndex);
+                    }
+                    else
+                    {
+                        // CONICAL POSITION (Your original working settings)
+                        leg.Position.Plane = Position.PlaneEnum.LEFT;
+                        leg.Position.Depth = Position.DepthEnum.BEHIND;
+                        leg.Position.Rotation = Position.RotationEnum.BELOW;
+                        leg.Position.RotationOffset = -45;
+                    }
+
+                    leg.SetLabel("LEG_" + legIndex + "_" + i);
+                    leg.Insert();
+                }
+            }
+            model.CommitChanges();
+        }
+
+        private void ApplyCorrectedVerticalPosition(Beam leg, int legIndex)
+        {
+            // Mapping your UI values to API:
+            // Vertical -> Plane (Right = DOWN , LEFT= up)
+            // Horizontal   -> Depth (Left=FRONT, RIGHT=BEHIND)
+            // Rotation   -> Rotation (Below/Front=BELOW, Back/Down=TOP)
+
+            switch (legIndex)
+            {
+                case 0: // Leg 1: Vert=Up, Rot=Below, Offset=0, Hor=Right
+                    leg.Position.Plane = Position.PlaneEnum.RIGHT;
+                    leg.Position.Rotation = Position.RotationEnum.TOP;
+                    leg.Position.RotationOffset = 0;
+                    leg.Position.Depth = Position.DepthEnum.FRONT;
+
+                    break;
+
+                case 1: // Leg 2: Vert=Up, Rot=Front, Offset=0, Hor=Left
+                    leg.Position.Plane = Position.PlaneEnum.RIGHT;
+                    leg.Position.Rotation = Position.RotationEnum.BACK;
+                    leg.Position.RotationOffset = 0;
+                    leg.Position.Depth = Position.DepthEnum.BEHIND;
+
+                    break;
+
+                case 2: // Leg 3: Vert=Top(Up), Rot=Down, Offset=0, Hor=Left
+                    leg.Position.Plane = Position.PlaneEnum.LEFT;
+                    leg.Position.Rotation = Position.RotationEnum.BELOW;
+                    leg.Position.RotationOffset = 0;
+                    leg.Position.Depth = Position.DepthEnum.BEHIND;
+                    break;
+
+                case 3: // Leg 4: Vert=Down, Rot=Back, Offset=0, Hor=Right
+                    leg.Position.Plane = Position.PlaneEnum.LEFT;
+                    leg.Position.Rotation = Position.RotationEnum.FRONT;
+                    leg.Position.RotationOffset = 0;
+                    leg.Position.Depth = Position.DepthEnum.FRONT;
+
+                    break;
+            }
+        }
+    }
+}

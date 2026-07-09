@@ -1,0 +1,315 @@
+﻿using System;
+using System.Collections.Generic;
+using RambollTowerGenerator.Models;
+using Tekla.Structures.Geometry3d;
+using Tekla.Structures.Model;
+
+namespace RambollTowerGenerator.Builders
+{
+    /// <summary>
+    /// Builder for creating L-parallel splice connections at segment joints
+    /// </summary>
+    public class JointBuilder
+    {
+        private readonly CageLegGeometryBuilder _geometryBuilder;
+
+        public JointBuilder()
+        {
+            _geometryBuilder = new CageLegGeometryBuilder();
+        }
+
+        /// <summary>
+        /// Creates splice connections at all segment joints
+        /// </summary>
+        public void CreateSpliceConnections(Model model, TowerModel tower)
+        {
+            List<List<Point>> legNodes = _geometryBuilder.BuildLegNodes(tower);
+            double segmentGap = tower.Geometry.SegmentGap;
+
+            if (segmentGap <= 0.0)
+            {
+                // No gaps = no splices needed
+                return;
+            }
+
+            for (int legIndex = 0; legIndex < tower.LegCount; legIndex++)
+            {
+                List<Point> nodes = legNodes[legIndex];
+                int segmentCount = nodes.Count - 1;
+
+                // Create splice at each internal joint (not at start or end)
+                for (int i = 1; i < segmentCount; i++)
+                {
+                    Point jointPoint = nodes[i];
+                    Point previousPoint = nodes[i - 1];
+                    Point nextPoint = nodes[i + 1];
+
+                    // Get the two segment endpoints that meet at this joint
+                    GetSegmentEndpointsAtJoint(previousPoint, jointPoint, nextPoint, 
+                        i - 1, i, segmentCount, segmentGap, 
+                        out Point lowerSegmentEnd, out Point upperSegmentStart);
+
+                    // Create splice connection between these two segments
+                    CreateSpliceConnection(model, tower, lowerSegmentEnd, upperSegmentStart, 
+                        legIndex, i, previousPoint, nextPoint);
+                }
+            }
+
+            model.CommitChanges();
+        }
+
+        /// <summary>
+        /// Gets the endpoints of two segments that meet at a joint (with gap)
+        /// </summary>
+        private void GetSegmentEndpointsAtJoint(Point previous, Point joint, Point next, 
+            int lowerSegmentIndex, int upperSegmentIndex, int totalSegments, double gap,
+            out Point lowerEnd, out Point upperStart)
+        {
+            // Calculate direction vectors
+            Vector lowerDirection = new Vector(joint.X - previous.X, joint.Y - previous.Y, joint.Z - previous.Z);
+            Vector upperDirection = new Vector(next.X - joint.X, next.Y - joint.Y, next.Z - joint.Z);
+
+            double lowerLength = lowerDirection.GetLength();
+            double upperLength = upperDirection.GetLength();
+
+            Vector lowerUnit = lowerLength > 0.001 ? lowerDirection.GetNormal() : new Vector(0, 0, 1);
+            Vector upperUnit = upperLength > 0.001 ? upperDirection.GetNormal() : new Vector(0, 0, 1);
+
+            double halfGap = gap / 2.0;
+
+            // Lower segment end (trimmed by halfGap)
+            lowerEnd = new Point(
+                joint.X - lowerUnit.X * halfGap,
+                joint.Y - lowerUnit.Y * halfGap,
+                joint.Z - lowerUnit.Z * halfGap);
+
+            // Upper segment start (trimmed by halfGap)
+            upperStart = new Point(
+                joint.X + upperUnit.X * halfGap,
+                joint.Y + upperUnit.Y * halfGap,
+                joint.Z + upperUnit.Z * halfGap);
+        }
+
+        /// <summary>
+        /// Creates an L-parallel splice connection using plates and bolts
+        /// </summary>
+        private void CreateSpliceConnection(Model model, TowerModel tower, 
+            Point lowerEnd, Point upperStart, int legIndex, int jointIndex,
+            Point previousPoint, Point nextPoint)
+        {
+            // Calculate the centerpoint and direction vector
+            Point centerPoint = new Point(
+                (lowerEnd.X + upperStart.X) / 2.0,
+                (lowerEnd.Y + upperStart.Y) / 2.0,
+                (lowerEnd.Z + upperStart.Z) / 2.0);
+
+            Vector axialDirection = new Vector(
+                upperStart.X - lowerEnd.X,
+                upperStart.Y - lowerEnd.Y,
+                upperStart.Z - lowerEnd.Z);
+
+            double gapDistance = axialDirection.GetLength();
+            Vector axialUnit = gapDistance > 0.001 ? axialDirection.GetNormal() : new Vector(0, 0, 1);
+
+            // Determine if leg is vertical or conical
+            bool isVertical = Math.Abs(lowerEnd.X - upperStart.X) < 0.1 && 
+                              Math.Abs(lowerEnd.Y - upperStart.Y) < 0.1;
+
+            // Calculate local coordinate system for splice
+            CoordinateSystem spliceCS = CalculateSpliceCoordinateSystem(
+                centerPoint, axialUnit, isVertical, legIndex);
+
+            // Get leg profile dimensions for positioning splice plates
+            double legWidth = GetLegProfileWidth(tower.Profile.LegProfile);
+
+            // Create two parallel splice plates (L-parallel configuration)
+            // Plate 1: On the "front" face of the leg angle
+            CreateSplicePlate(model, tower, spliceCS, legWidth, 
+                legIndex, jointIndex, 1, lowerEnd, upperStart);
+
+            // Plate 2: On the "back" face of the leg angle
+            CreateSplicePlate(model, tower, spliceCS, legWidth, 
+                legIndex, jointIndex, 2, lowerEnd, upperStart);
+
+            // Create bolt group connecting the plates
+            CreateBoltGroup(model, tower, spliceCS, legWidth, 
+                legIndex, jointIndex, lowerEnd, upperStart);
+        }
+
+        /// <summary>
+        /// Calculates the local coordinate system for the splice connection
+        /// </summary>
+        private CoordinateSystem CalculateSpliceCoordinateSystem(Point origin, 
+            Vector axialDirection, bool isVertical, int legIndex)
+        {
+            Vector xAxis, yAxis, zAxis;
+
+            // Z-axis = axial direction (along leg)
+            zAxis = axialDirection;
+
+            if (isVertical)
+            {
+                // For vertical legs, use a consistent horizontal reference
+                // X-axis points radially outward from tower center
+                double angle = legIndex * (360.0 / 3.0); // Assuming 3 or 4 legs
+                xAxis = new Vector(
+                    Math.Cos(angle * Math.PI / 180.0),
+                    Math.Sin(angle * Math.PI / 180.0),
+                    0.0);
+            }
+            else
+            {
+                // For conical legs, project horizontal plane
+                if (Math.Abs(axialDirection.X) < 0.001 && Math.Abs(axialDirection.Y) < 0.001)
+                {
+                    xAxis = new Vector(1, 0, 0);
+                }
+                else
+                {
+                    xAxis = new Vector(-axialDirection.Y, axialDirection.X, 0.0);
+                }
+            }
+
+            xAxis = xAxis.GetNormal();
+
+            // Y-axis = Z cross X
+            yAxis = zAxis.Cross(xAxis).GetNormal();
+
+            return new CoordinateSystem(origin, xAxis, yAxis);
+        }
+
+        /// <summary>
+        /// Creates a splice plate parallel to the leg profile face
+        /// </summary>
+        private void CreateSplicePlate(Model model, TowerModel tower, 
+            CoordinateSystem spliceCS, double legWidth, 
+            int legIndex, int jointIndex, int plateNumber,
+            Point primaryPart, Point secondaryPart)
+        {
+            ContourPlate plate = new ContourPlate();
+            plate.Profile.ProfileString = tower.Joint.SplicePlateProfile;
+            plate.Material.MaterialString = tower.Joint.SplicePlateMaterial;
+            plate.Class = "6";
+            plate.Name = "SPLICE_PLATE";
+
+            // Calculate plate dimensions
+            double plateLength = tower.Joint.SplicePlateLength;
+            double plateWidth = legWidth - 20.0; // Slightly narrower than leg width
+            double halfLength = plateLength / 2.0;
+            double halfWidth = plateWidth / 2.0;
+
+            // Offset for parallel plates (on opposite faces of the leg angle)
+            double plateOffset = (plateNumber == 1) ? legWidth / 4.0 : -legWidth / 4.0;
+
+            // Define plate contour in local coordinate system
+            // Rectangle centered on splice location
+            Contour contour = new Contour();
+            contour.AddContourPoint(new ContourPoint(
+                new Point(
+                    spliceCS.Origin.X + spliceCS.AxisX.X * (-halfWidth + plateOffset) + spliceCS.AxisY.X * (-halfLength),
+                    spliceCS.Origin.Y + spliceCS.AxisX.Y * (-halfWidth + plateOffset) + spliceCS.AxisY.Y * (-halfLength),
+                    spliceCS.Origin.Z + spliceCS.AxisX.Z * (-halfWidth + plateOffset) + spliceCS.AxisY.Z * (-halfLength)),
+                null));
+
+            contour.AddContourPoint(new ContourPoint(
+                new Point(
+                    spliceCS.Origin.X + spliceCS.AxisX.X * (halfWidth + plateOffset) + spliceCS.AxisY.X * (-halfLength),
+                    spliceCS.Origin.Y + spliceCS.AxisX.Y * (halfWidth + plateOffset) + spliceCS.AxisY.Y * (-halfLength),
+                    spliceCS.Origin.Z + spliceCS.AxisX.Z * (halfWidth + plateOffset) + spliceCS.AxisY.Z * (-halfLength)),
+                null));
+
+            contour.AddContourPoint(new ContourPoint(
+                new Point(
+                    spliceCS.Origin.X + spliceCS.AxisX.X * (halfWidth + plateOffset) + spliceCS.AxisY.X * halfLength,
+                    spliceCS.Origin.Y + spliceCS.AxisX.Y * (halfWidth + plateOffset) + spliceCS.AxisY.Y * halfLength,
+                    spliceCS.Origin.Z + spliceCS.AxisX.Z * (halfWidth + plateOffset) + spliceCS.AxisY.Z * halfLength),
+                null));
+
+            contour.AddContourPoint(new ContourPoint(
+                new Point(
+                    spliceCS.Origin.X + spliceCS.AxisX.X * (-halfWidth + plateOffset) + spliceCS.AxisY.X * halfLength,
+                    spliceCS.Origin.Y + spliceCS.AxisX.Y * (-halfWidth + plateOffset) + spliceCS.AxisY.Y * halfLength,
+                    spliceCS.Origin.Z + spliceCS.AxisX.Z * (-halfWidth + plateOffset) + spliceCS.AxisY.Z * halfLength),
+                null));
+
+            plate.Contour = contour;
+            plate.SetLabel($"SPLICE_LEG{legIndex}_J{jointIndex}_P{plateNumber}");
+            plate.Insert();
+        }
+
+        /// <summary>
+        /// Creates bolt group for the splice connection
+        /// </summary>
+        private void CreateBoltGroup(Model model, TowerModel tower, 
+            CoordinateSystem spliceCS, double legWidth,
+            int legIndex, int jointIndex, Point primaryPart, Point secondaryPart)
+        {
+            BoltArray boltArray = new BoltArray();
+            boltArray.BoltSize = tower.Joint.BoltSize;
+            boltArray.BoltStandard = tower.Joint.BoltStandard;
+            boltArray.Tolerance = tower.Joint.BoltTolerance;
+            boltArray.BoltType = BoltGroup.BoltTypeEnum.BOLT_TYPE_SITE;
+            boltArray.CutLength = 100;
+            boltArray.ThreadInMaterial = BoltGroup.BoltThreadInMaterialEnum.THREAD_IN_MATERIAL_YES;
+
+            // Position bolts
+            boltArray.FirstPosition = primaryPart;
+            boltArray.SecondPosition = secondaryPart;
+
+            // Bolt arrangement parameters from JointModel
+            int boltRows = tower.Joint.BoltRows;
+            int boltsPerRow = tower.Joint.BoltsPerRow;
+            double spacingX = tower.Joint.BoltSpacingX;
+            double spacingY = tower.Joint.BoltSpacingY;
+            double edgeDistance = tower.Joint.EdgeDistance;
+
+            // Add bolts in grid pattern
+            boltArray.AddBoltDistX(0.0);
+            for (int i = 1; i < boltsPerRow; i++)
+            {
+                boltArray.AddBoltDistX(spacingX);
+            }
+
+            boltArray.AddBoltDistY(0.0);
+            for (int i = 1; i < boltRows; i++)
+            {
+                boltArray.AddBoltDistY(spacingY);
+            }
+
+            boltArray.Position.Depth = Position.DepthEnum.MIDDLE;
+            boltArray.Position.Plane = Position.PlaneEnum.MIDDLE;
+            boltArray.Position.Rotation = Position.RotationEnum.FRONT;
+
+            boltArray.Insert();
+        }
+
+        /// <summary>
+        /// Extracts leg profile width from profile string (e.g., "BLL100*100*5")
+        /// </summary>
+        private double GetLegProfileWidth(string profileString)
+        {
+            if (string.IsNullOrEmpty(profileString))
+                return 100.0;
+
+            try
+            {
+                // Parse profile string like "BLL100*100*5"
+                string[] parts = profileString.Split('*');
+                if (parts.Length >= 1)
+                {
+                    string widthPart = parts[0].Replace("BLL", "").Replace("L", "").Trim();
+                    if (double.TryParse(widthPart, out double width))
+                    {
+                        return width;
+                    }
+                }
+            }
+            catch
+            {
+                // Fall through to default
+            }
+
+            return 100.0; // Default 100mm
+        }
+    }
+}

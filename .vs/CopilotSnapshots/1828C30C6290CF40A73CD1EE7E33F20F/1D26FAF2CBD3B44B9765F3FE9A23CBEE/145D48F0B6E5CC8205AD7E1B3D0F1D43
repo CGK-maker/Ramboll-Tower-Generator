@@ -1,0 +1,112 @@
+﻿using RambollTowerGenerator.Models;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Tekla.Structures.Drawing;
+using Tekla.Structures.Geometry3d;
+using Tekla.Structures.Model;
+using Tekla.Structures.Model.Operations;
+using Tekla.Structures.Model.UI;
+using Tekla.Structures.Plugins;
+using System.Windows.Forms;
+using static Tekla.Structures.Filtering.Categories.PartFilterExpressions;
+
+namespace RambollTowerGenerator
+{
+
+    [Plugin("TowerGenerator")]
+    [PluginUserInterface("RambollTowerGenerator.Views.MainWindow")]
+    public class TowerPlugin : PluginBase
+    {
+
+        private string _PartName = string.Empty;
+        private string _Profile = string.Empty;
+        private string _Material = string.Empty;
+        private double _Offset = 0.0;
+        private int _LengthFactor = 0;
+        private Model _Model;
+        private TowerPluginData _Data;
+
+        public Model Model { 
+            get 
+            { return _Model; 
+            } 
+            set 
+            { _Model = value; }
+        }
+        public TowerPluginData Data 
+        { 
+            get 
+            { 
+                return _Data; 
+            } 
+            set 
+            { 
+                _Data = value;
+            }
+        }
+        public TowerPlugin(TowerPluginData data) 
+        {
+            Model = new Model();
+            Data = data;
+        }
+        public override List<InputDefinition> DefineInput()
+        {
+            List<InputDefinition> PointList = new List<InputDefinition>();
+
+            Picker Picker = new Picker();
+
+            ArrayList PickedPoints = Picker.PickPoints(Picker.PickPointEnum.PICK_TWO_POINTS, "Pick start point and end point for the tower");
+
+            PointList.Add(new InputDefinition(PickedPoints));
+
+            return PointList;
+        }
+
+        public override bool Run(List<InputDefinition> Input)
+        {
+            try
+            {
+                GetValuesFromDialog();
+
+                ArrayList Points = (ArrayList)Input[0].GetInput();
+                Point StartPoint = Points[0] as Point;
+                Point EndPoint = Points[1] as Point;
+
+                Beam beam = new Beam(StartPoint, EndPoint);
+                beam.Profile.ProfileString = _Profile;
+                beam.Material.MaterialString = _Material;
+
+                // With this we help internal code to assign same ID to beam when plugin is modified.
+                // To avoid some problems related to links with UDA values or booleans (cuts, fittings) for example.
+                beam.SetLabel("MyWPFBeam01");
+
+                beam.Insert();
+
+                Operation.DisplayPrompt("Selected component " + _Data.profile + " : " + _Data.TowerType.ToString());
+
+            }
+            catch (Exception Exc)
+            {
+                MessageBox.Show(Exc.ToString());
+            }
+
+            return true;
+        }
+
+        private void GetValuesFromDialog()
+        {
+            _Profile = Data.profile;
+            _Material = Data.material;
+
+
+            if (IsDefaultValue(_PartName))
+                _PartName = "TEST";
+            if (IsDefaultValue(_Profile))
+                _Profile = "HEA200";
+            if (IsDefaultValue(_Material))
+                _Material = "STEEL_UNDEFINED";
+
+        }
+    }
+}

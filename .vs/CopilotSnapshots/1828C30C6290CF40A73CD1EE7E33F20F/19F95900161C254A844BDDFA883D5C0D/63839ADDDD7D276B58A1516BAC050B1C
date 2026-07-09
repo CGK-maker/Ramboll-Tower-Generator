@@ -1,0 +1,192 @@
+﻿using System.ComponentModel;
+using RambollTowerGenerator.Common;
+using RambollTowerGenerator.Models;
+using TD = Tekla.Structures.Datatype;
+using Tekla.Structures.Dialog;
+
+namespace RambollTowerGenerator.ViewModels
+{
+    public class MainViewModel : INotifyPropertyChanged
+    {
+        private TowerModel _towerModel;
+        private int _towerType = 0;
+        private string profile = string.Empty;
+        private string material = string.Empty;
+        private double _baseWidth = 5000.0;
+        private double _topWidth = 2400.0;
+        private int _segmentCount = 6;
+        private double _totalHeight = 30000.0;
+        private int _cageType = 0;
+        private double _verticalHeight = 0.0;
+        private int _verticalSegmentCount = 2;
+
+        public MainViewModel()
+        {
+            _towerModel = new TowerModel();
+            _towerModel.Geometry.BaseWidth = _baseWidth;
+            _towerModel.Geometry.TopWidth = _topWidth;
+            _towerModel.Geometry.SegmentCount = _segmentCount;
+            _towerModel.Geometry.TotalHeight = _totalHeight;
+            _towerModel.Cage.CageType = Common.CageType.Conical;
+            _towerModel.Cage.VerticalHeight = _verticalHeight;
+            _towerModel.Cage.VerticalSegmentCount = _verticalSegmentCount;
+        }
+
+        [StructuresDialog("towertype", typeof(TD.Integer))]
+        public int TowerType
+        {
+            get { return _towerType; }
+            set
+            {
+                int normalized = value == int.MinValue ? 0 : (value < 0 || value > 1 ? 0 : value);
+                _towerType = normalized;
+                _towerModel.TowerType = normalized == 0 ? Common.TowerType.ThreeLeg : Common.TowerType.FourLeg;
+                OnPropertyChanged(nameof(TowerType));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("profile", typeof(TD.String))]
+        public string Profilename
+        {
+            get { return profile; }
+            set
+            {
+                profile = value;
+                _towerModel.Profile.LegProfile = value;
+                OnPropertyChanged(nameof(Profilename));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("material", typeof(TD.String))]
+        public string Material
+        {
+            get { return material; }
+            set
+            {
+                material = value;
+                _towerModel.Profile.LegMaterial = value;
+                OnPropertyChanged(nameof(Material));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("basewidth", typeof(TD.Double))]
+        public double BaseWidth
+        {
+            get { return _baseWidth; }
+            set
+            {
+                double normalized = (value == double.MinValue || value <= 0.0) ? 5000.0 : value;
+                _baseWidth = normalized;
+                _towerModel.Geometry.BaseWidth = normalized;
+                OnPropertyChanged(nameof(BaseWidth));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("topwidth", typeof(TD.Double))]
+        public double TopWidth
+        {
+            get { return _topWidth; }
+            set
+            {
+                double normalized = (value == double.MinValue || value <= 0.0) ? 2400.0 : value;
+                _topWidth = normalized;
+                _towerModel.Geometry.TopWidth = normalized;
+                OnPropertyChanged(nameof(TopWidth));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("segmentcount", typeof(TD.Integer))]
+        public int SegmentCount
+        {
+            get { return _segmentCount; }
+            set
+            {
+                int normalized = value == int.MinValue || value < 1 ? 6 : value;
+                _segmentCount = normalized;
+                _towerModel.Geometry.SegmentCount = normalized;
+                OnPropertyChanged(nameof(SegmentCount));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("totalheight", typeof(TD.Double))]
+        public double TotalHeight
+        {
+            get { return _totalHeight; }
+            set
+            {
+                double normalized = (value == double.MinValue || value <= 0.0) ? 30000.0 : value;
+                _totalHeight = normalized;
+                _towerModel.Geometry.TotalHeight = normalized;
+                OnPropertyChanged(nameof(TotalHeight));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("cagetype", typeof(TD.Integer))]
+        public int CageType
+        {
+            get { return _cageType; }
+            set
+            {
+                int normalized = value == int.MinValue ? 0 : (value < 0 || value > 2 ? 0 : value);
+                _cageType = normalized;
+                _towerModel.Cage.CageType = normalized == 1 ? Common.CageType.Vertical : (normalized == 2 ? Common.CageType.ConicalVertical : Common.CageType.Conical);
+                OnPropertyChanged(nameof(CageType));
+                OnPropertyChanged(nameof(IsConicalVerticalSelected));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("verticalheight", typeof(TD.Double))]
+        public double VerticalHeight
+        {
+            get { return _verticalHeight; }
+            set
+            {
+                double normalized = value == double.MinValue || value < 0.0 ? 0.0 : value;
+                _verticalHeight = normalized;
+                _towerModel.Cage.VerticalHeight = normalized;
+                OnPropertyChanged(nameof(VerticalHeight));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        [StructuresDialog("vertsegcnt", typeof(TD.Integer))]
+        public int VerticalSegmentCount
+        {
+            get { return _verticalSegmentCount; }
+            set
+            {
+                int normalized = value == int.MinValue || value < 1 ? 2 : value;
+                _verticalSegmentCount = normalized;
+                _towerModel.Cage.VerticalSegmentCount = normalized;
+                OnPropertyChanged(nameof(VerticalSegmentCount));
+                OnPropertyChanged(nameof(Tower));
+            }
+        }
+
+        public bool IsConicalVerticalSelected
+        {
+            get { return _cageType == 2; }
+        }
+
+        public TowerModel Tower
+        {
+            get { return _towerModel; }
+            set { _towerModel = value; }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}
