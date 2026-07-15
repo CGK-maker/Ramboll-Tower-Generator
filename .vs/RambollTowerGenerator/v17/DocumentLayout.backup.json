@@ -1,13 +1,13 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\",
+  "WorkspaceRootPath": "C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|c:\\users\\gkar\\source\\repos\\rambolltowergenerator\\rambolltowergenerator\\builders\\bracingbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|c:\\users\\gkar\\source\\repos\\ramboll-tower-generator\\rambolltowergenerator\\builders\\bracingbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\builders\\bracingbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\rambolltowergenerator\\builders\\legbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\rambolltowergenerator\\builders\\legbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\builders\\legbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
@@ -18,15 +18,23 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 3,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:128:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 1,
               "Title": "LegBuilder.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\LegBuilder.cs",
+              "DocumentMoniker": "C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\RambollTowerGenerator\\Builders\\LegBuilder.cs",
               "RelativeDocumentMoniker": "RambollTowerGenerator\\Builders\\LegBuilder.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\LegBuilder.cs",
+              "ToolTip": "C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\RambollTowerGenerator\\Builders\\LegBuilder.cs",
               "RelativeToolTip": "RambollTowerGenerator\\Builders\\LegBuilder.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAABHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -36,11 +44,11 @@
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "BracingBuilder.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\BracingBuilder.cs",
+              "DocumentMoniker": "C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\RambollTowerGenerator\\Builders\\BracingBuilder.cs",
               "RelativeDocumentMoniker": "RambollTowerGenerator\\Builders\\BracingBuilder.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\BracingBuilder.cs*",
-              "RelativeToolTip": "RambollTowerGenerator\\Builders\\BracingBuilder.cs*",
-              "ViewState": "AgIAAE0BAAAAAAAAAAAxwJIAAAAnAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\RambollTowerGenerator\\Builders\\BracingBuilder.cs",
+              "RelativeToolTip": "RambollTowerGenerator\\Builders\\BracingBuilder.cs",
+              "ViewState": "AgIAAKAAAAAAAAAAAAAMwKMAAAA/AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-07-07T05:23:00.077Z",
               "EditorCaption": ""
