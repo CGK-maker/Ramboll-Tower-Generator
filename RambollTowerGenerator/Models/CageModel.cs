@@ -9,8 +9,8 @@ namespace RambollTowerGenerator.Models
 {
     public class CageModel
     {
-        public CageType CageType { get; set; } = CageType.Conical;
-        public double VerticalHeight { get; set; } = 0.0;
-        public int VerticalSegmentCount { get; set; } = 2;
+        public CageType CageType { get; set; } 
+        public double VerticalHeight { get; set; } 
+        public int VerticalSegmentCount { get; set; }
     }
 }

@@ -20,12 +20,6 @@ namespace RambollTowerGenerator.Builders
             List<List<Point>> legNodes = _cageLegGeometryBuilder.BuildLegNodes(tower);
             double segmentGap = tower.Geometry.SegmentGap;
 
-            tower.LegBeams.Clear();
-            for (int legIndex = 0; legIndex < tower.LegCount; legIndex++)
-            {
-                tower.LegBeams.Add(new List<Beam>());
-            }
-
             for (int legIndex = 0; legIndex < tower.LegCount; legIndex++)
             {
                 List<Point> nodes = legNodes[legIndex];
@@ -60,8 +54,6 @@ namespace RambollTowerGenerator.Builders
 
                     leg.SetLabel("LEG_" + legIndex + "_" + i);
                     leg.Insert();
-
-                    tower.LegBeams[legIndex].Add(leg);
                 }
             }
             model.CommitChanges();

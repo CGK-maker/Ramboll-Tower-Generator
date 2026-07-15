@@ -11,7 +11,7 @@ namespace RambollTowerGenerator.ViewModels
     {
         private TowerModel _towerModel;
         private int _towerType = 0;
-        private string profile = "L150*150*5";
+        private string profile = "BLL100*100*5";
         private string material = "STEEL_UNDEFINED";
         private double _baseWidth = 5000.0;
         private double _topWidth = 2400.0;
@@ -24,9 +24,9 @@ namespace RambollTowerGenerator.ViewModels
 
         // Bracing properties
         private int _bracingType = 1; // Default to XBracing
-        private string _diagonalProfile = "L50*50*5";
+        private string _diagonalProfile = "BLL100*100*5";
         private string _diagonalMaterial = "STEEL_UNDEFINED";
-        private string _horizontalProfile = "L50*50*5";
+        private string _horizontalProfile = "BLL100*100*5";
         private string _horizontalMaterial = "STEEL_UNDEFINED";
         private int _bracingLevels = 3;
         private bool _includeTopHorizontal = true;
@@ -75,7 +75,7 @@ namespace RambollTowerGenerator.ViewModels
             get { return profile; }
             set
             {
-                string normalized = string.IsNullOrWhiteSpace(value) ? "L150*150*5" : value;
+                string normalized = string.IsNullOrWhiteSpace(value) ? "BLL100*100*5" : value;
                 profile = normalized;
                 _towerModel.Profile.LegProfile = normalized;
                 OnPropertyChanged(nameof(Profilename));
@@ -233,7 +233,7 @@ namespace RambollTowerGenerator.ViewModels
             get { return _diagonalProfile; }
             set
             {
-                string normalized = string.IsNullOrWhiteSpace(value) ? "L50*50*5" : value;
+                string normalized = string.IsNullOrWhiteSpace(value) ? "BLL100*100*5" : value;
                 _diagonalProfile = normalized;
                 _towerModel.Bracing.DiagonalProfile = normalized;
                 OnPropertyChanged(nameof(DiagonalProfile));
@@ -261,7 +261,7 @@ namespace RambollTowerGenerator.ViewModels
             get { return _horizontalProfile; }
             set
             {
-                string normalized = string.IsNullOrWhiteSpace(value) ? "L50*50*5" : value;
+                string normalized = string.IsNullOrWhiteSpace(value) ? "BLL100*100*5" : value;
                 _horizontalProfile = normalized;
                 _towerModel.Bracing.HorizontalProfile = normalized;
                 OnPropertyChanged(nameof(HorizontalProfile));

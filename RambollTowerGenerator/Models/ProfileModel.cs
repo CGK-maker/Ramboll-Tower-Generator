@@ -8,7 +8,7 @@ namespace RambollTowerGenerator.Models
 {
     public class ProfileModel
     {
-        public string LegProfile { get; set; } = "BLL100*100*5";
-        public string LegMaterial { get; set; } = "STEEL_UNDEFINED";
+        public string LegProfile { get; set; }
+        public string LegMaterial { get; set; }
     }
 }
