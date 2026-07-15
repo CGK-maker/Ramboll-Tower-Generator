@@ -80,7 +80,7 @@ namespace RambollTowerGenerator.Builders
                     // MATHEMATICAL REDUCTION OF LENGTH
                     // We move the points along the face of the tower towards the other leg
 
-                    // Vector from Left Leg to Right Leg
+                    // Vector from Left Leg to Right Leg (along the face)
                     Vector vLtoR = new Vector(pBR_Edge.X - pBL_Edge.X, pBR_Edge.Y - pBL_Edge.Y, 0);
                     vLtoR.Normalize();
 
@@ -88,15 +88,32 @@ namespace RambollTowerGenerator.Builders
                     Vector vRtoL = new Vector(pBL_Edge.X - pBR_Edge.X, pBL_Edge.Y - pBR_Edge.Y, 0);
                     vRtoL.Normalize();
 
-                    // New Work Points (Shifted inward to the center of the leg profile)
-                    Point bottomLeft = new Point(pBL_Edge.X + (vLtoR.X * halfLeg), pBL_Edge.Y + (vLtoR.Y * halfLeg), pBL_Edge.Z);
-                    Point topLeft = new Point(pTL_Edge.X + (vLtoR.X * halfLeg), pTL_Edge.Y + (vLtoR.Y * halfLeg), pTL_Edge.Z);
-                    Point bottomRight = new Point(pBR_Edge.X + (vRtoL.X * halfLeg), pBR_Edge.Y + (vRtoL.Y * halfLeg), pBR_Edge.Z);
-                    Point topRight = new Point(pTR_Edge.X + (vRtoL.X * halfLeg), pTR_Edge.Y + (vRtoL.Y * halfLeg), pTR_Edge.Z);
+                    // Outward face normal (perpendicular to the face, pointing away from tower center)
+                    // This is direction-agnostic: it resolves to +Y, -Y, +X, or -X depending on the face.
+                    Vector outwardNormal = GetOutwardFaceNormal(legNodes, leg1Index, leg2Index, levelBottomZ);
 
-                    double legThickness = GetThicknessFromProfile(tower.Profile.LegProfile);
+                    // New Work Points (Shifted inward to the center of the leg profile)
+                    Point bottomLeft  = new Point(pBL_Edge.X + (vLtoR.X * halfLeg), pBL_Edge.Y + (vLtoR.Y * halfLeg), pBL_Edge.Z);
+                    Point topLeft     = new Point(pTL_Edge.X + (vLtoR.X * halfLeg), pTL_Edge.Y + (vLtoR.Y * halfLeg), pTL_Edge.Z);
+                    Point bottomRight = new Point(pBR_Edge.X + (vRtoL.X * halfLeg), pBR_Edge.Y + (vRtoL.Y * halfLeg), pBR_Edge.Z);
+                    Point topRight    = new Point(pTR_Edge.X + (vRtoL.X * halfLeg), pTR_Edge.Y + (vRtoL.Y * halfLeg), pTR_Edge.Z);
+
+                    double legThickness  = GetThicknessFromProfile(tower.Profile.LegProfile);
                     double diagThickness = GetThicknessFromProfile(tower.Bracing.DiagonalProfile);
-                    double diagWidth = GetWidthFromProfile(tower.Bracing.DiagonalProfile);
+                    double diagWidth     = GetWidthFromProfile(tower.Bracing.DiagonalProfile);
+
+                    // Shift diagonal2's top-left end BACKWARDS (outward-negative = into the tower face)
+                    // by the leg profile thickness so diagonal2 sits behind the leg flange.
+                    // "Backward" = -outwardNormal, and its actual axis (X / -X / Y / -Y) depends on the face.
+                    Point topLeftShifted = new Point(
+                        topLeft.X - (outwardNormal.X * legThickness),
+                        topLeft.Y - (outwardNormal.Y * legThickness),
+                        topLeft.Z);
+
+                    Point bottomRightShifted = new Point(
+                        bottomRight.X - (outwardNormal.X * legThickness),
+                        bottomRight.Y - (outwardNormal.Y * legThickness),
+                        bottomRight.Z);
 
                     // Create diagonal1 (/)
                     Beam diagonal1 = CreateBracingBeam(
@@ -109,10 +126,10 @@ namespace RambollTowerGenerator.Builders
                         true);
                     diagonal1.Insert();
 
-                    // Create diagonal2 (\)
+                    // Create diagonal2 (\) — endpoint shifted backwards by leg thickness (5 mm)
                     Beam diagonal2 = CreateBracingBeam(
-                        bottomRight,
-                        topLeft,
+                        bottomRightShifted,
+                        topLeftShifted,
                         tower.Bracing.DiagonalProfile,
                         tower.Bracing.DiagonalMaterial,
                         $"X_DIAG_L{level}_F{faceIndex}_2",
@@ -121,7 +138,34 @@ namespace RambollTowerGenerator.Builders
                     diagonal2.Insert();
 
                     // Bolt at Bottom Right Leg (Leg + Diagonal 2)
-                    CreateTripleBolt(legRight, diagonal2, null, bottomRight, topLeft, diagWidth);
+                    // IMPORTANT (Tekla BoltArray orientation):
+                    //   FirstPosition -> SecondPosition defines the X-AXIS of the bolt PLANE
+                    //   (the gauge/distribution line). The bolt SHAFT runs along the plane
+                    //   NORMAL = (SecondPosition - FirstPosition) x up.
+                    //   So to make the shaft point along the outward face normal (the X axis
+                    //   through the leg), the two positions must run ALONG THE FACE (tangent),
+                    //   NOT along the outward normal. Position.Rotation then just flips +X/-X.
+                    Vector faceTangent = new Vector(vLtoR.X, vLtoR.Y, 0);
+                    faceTangent.Normalize();
+
+                    Point boltFirst  = bottomRightShifted;
+                    Point boltSecond = new Point(
+                        boltFirst.X + (faceTangent.X * 20.0),
+                        boltFirst.Y + (faceTangent.Y * 20.0),
+                        boltFirst.Z);
+
+                    CreateTripleBolt(diagonal1, diagonal2, null, boltFirst, boltSecond, diagWidth);
+
+                    Vector faceTangent1 = new Vector(vRtoL.X, vRtoL.Y, 0);
+                    faceTangent.Normalize();
+
+                    Point boltFirst1 = topLeftShifted;
+                    Point boltSecond1 = new Point(
+                        boltFirst1.X + (faceTangent1.X * 20.0),
+                        boltFirst1.Y + (faceTangent1.Y * 20.0),
+                        boltFirst1.Z);
+
+                    CreateTripleBolt(diagonal1, diagonal2, null, boltFirst1, boltSecond1, diagWidth);
                 }
 
                 CreateHorizontalBracingRingAtZ(tower, legNodes, levelMidZ, level, halfLeg);
@@ -183,7 +227,8 @@ namespace RambollTowerGenerator.Builders
             boltArray.BoltSize = 16.0;
             boltArray.BoltStandard = "8.8XOX";
             boltArray.Tolerance = 2.0;
-            boltArray.CutLength = 100.0; // Large enough for Leg + 2 Braces
+            boltArray.CutLength = 50.0; // Large enough for Leg + 2 Braces
+            boltArray.ExtraLength = 50.0;
 
             boltArray.Bolt = true;
             boltArray.Washer1 = true;
@@ -192,8 +237,13 @@ namespace RambollTowerGenerator.Builders
             boltArray.Hole2 = true;
 
             // Gauge Line positioning
-            double gaugeLine = braceWidth * 0.55;
+            //double gaugeLine = braceWidth * 0.55;
             //boltArray.Position.PlaneOffset = -gaugeLine;
+
+            // Shaft now runs along the plane normal (the outward face / X axis) because
+            // FirstPosition->SecondPosition is the face tangent. Use FRONT/BACK to choose
+            // which side (+X or -X) the bolt points. FRONT/BACK flip the normal; TOP/BELOW
+            // would only spin the bolt around its own shaft (the effect you saw before).
             boltArray.Position.Rotation = Position.RotationEnum.BELOW;
 
             boltArray.Insert();
@@ -274,7 +324,7 @@ namespace RambollTowerGenerator.Builders
                 beam.Position.Plane = Position.PlaneEnum.RIGHT;        // <-- CHANGE THIS FOR (\) DIAGONAL
                 beam.Position.Depth = Position.DepthEnum.MIDDLE;       // <-- CHANGE THIS FOR (\) DIAGONAL
                 beam.Position.Rotation = Position.RotationEnum.TOP; // <-- CHANGE THIS FOR (\) DIAGONAL
-                beam.Position.RotationOffset = -3; // <-- CHANGE THIS FOR (/) DIAGONAL
+                beam.Position.RotationOffset = 6; // <-- CHANGE THIS FOR (/) DIAGONAL
                 beam.StartPointOffset.Dx = -dxOffset;
                 beam.EndPointOffset.Dx = dxOffset;
 
@@ -320,6 +370,38 @@ namespace RambollTowerGenerator.Builders
 
             beam.SetLabel(label);
             return beam;
+        }
+
+        /// <summary>
+        /// Returns the horizontal outward normal of the face defined by leg1 and leg2
+        /// at the given Z. "Outward" = pointing away from the tower's horizontal centroid.
+        /// Depending on which face we're on, this resolves naturally to +X, -X, +Y, or -Y
+        /// (or a diagonal for non-orthogonal towers).
+        /// </summary>
+        private Vector GetOutwardFaceNormal(List<List<Point>> legNodes, int leg1Index, int leg2Index, double z)
+        {
+            // Tower center in XY at this Z (average of all leg centerlines)
+            double cx = 0, cy = 0;
+            int n = legNodes.Count;
+            for (int i = 0; i < n; i++)
+            {
+                Point p = GetPointAtZ(legNodes[i], z);
+                cx += p.X;
+                cy += p.Y;
+            }
+            cx /= n;
+            cy /= n;
+
+            Point p1 = GetPointAtZ(legNodes[leg1Index], z);
+            Point p2 = GetPointAtZ(legNodes[leg2Index], z);
+
+            // Midpoint of the face
+            double mx = (p1.X + p2.X) / 2.0;
+            double my = (p1.Y + p2.Y) / 2.0;
+
+            Vector outward = new Vector(mx - cx, my - cy, 0);
+            outward.Normalize();
+            return outward;
         }
     }
 }
