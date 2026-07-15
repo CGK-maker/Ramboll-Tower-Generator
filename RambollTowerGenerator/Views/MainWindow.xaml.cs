@@ -145,45 +145,5 @@ namespace RambollTowerGenerator.Views
         {
             this.dataModel.HorizontalMaterial = this.horizontalMaterialCatalog.SelectedMaterial;
         }
-
-        // Splice Plate Profile Catalog
-        private void splicePlateProfileCatalog_SelectClicked(object sender, EventArgs e)
-        {
-            this.splicePlateProfileCatalog.SelectedProfile = this.dataModel.SplicePlateProfile;
-        }
-
-        private void splicePlateProfileCatalog_SelectionDone(object sender, EventArgs e)
-        {
-            this.dataModel.SplicePlateProfile = this.splicePlateProfileCatalog.SelectedProfile;
-        }
-
-        // Splice Plate Material Catalog
-        private void splicePlateMaterialCatalog_SelectClicked(object sender, EventArgs e)
-        {
-            this.splicePlateMaterialCatalog.SelectedMaterial = this.dataModel.SplicePlateMaterial;
-        }
-
-        private void splicePlateMaterialCatalog_SelectionDone(object sender, EventArgs e)
-        {
-            this.dataModel.SplicePlateMaterial = this.splicePlateMaterialCatalog.SelectedMaterial;
-        }
-
-        // Bolt Size Catalog - SelectionChanged event
-        private void boltSizeCatalog_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (this.boltSizeCatalog.SelectedItem != null)
-            {
-                this.dataModel.BoltSize = this.boltSizeCatalog.Text;
-            }
-        }
-
-        // Bolt Standard Catalog - SelectionChanged event
-        private void boltStandardCatalog_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (this.boltStandardCatalog.SelectedItem != null)
-            {
-                this.dataModel.BoltStandard = this.boltStandardCatalog.Text;
-            }
-        }
     }
 }

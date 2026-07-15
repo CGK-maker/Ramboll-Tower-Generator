@@ -8,10 +8,10 @@ namespace RambollTowerGenerator.Models
 {
     public class GeometryModel
     {
-        public int SegmentCount { get; set; } = 6;
-        public double TotalHeight { get; set; } = 30000.0;
-        public double BaseWidth { get; set; } = 5000.0;
-        public double TopWidth { get; set; } = 2400.0;
-        public double SegmentGap { get; set; } = 3.0; // Default 3mm gap between segments
+        public int SegmentCount { get; set; }
+        public double TotalHeight { get; set; }
+        public double BaseWidth { get; set; }
+        public double TopWidth { get; set; }
+        public double SegmentGap { get; set; }
     }
 }

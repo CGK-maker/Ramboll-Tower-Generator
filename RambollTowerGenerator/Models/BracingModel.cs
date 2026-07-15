@@ -6,12 +6,12 @@ namespace RambollTowerGenerator.Models
     {
         public BracingType BracingType { get; set; } = BracingType.XBracing;
 
-        public string DiagonalProfile { get; set; } = "BLL100*100*5";
-        public string DiagonalMaterial { get; set; } = "STEEL_UNDEFINED";
+        public string DiagonalProfile { get; set; } 
+        public string DiagonalMaterial { get; set; }
 
-        public string HorizontalProfile { get; set; } = "BLL100*100*5";
-        public string HorizontalMaterial { get; set; } = "STEEL_UNDEFINED";
+        public string HorizontalProfile { get; set; } 
+        public string HorizontalMaterial { get; set; } 
 
-        public int BracingLevels { get; set; } = 3;
+        public int BracingLevels { get; set; }
     }
 }

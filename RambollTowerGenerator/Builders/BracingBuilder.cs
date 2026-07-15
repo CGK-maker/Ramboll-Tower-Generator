@@ -1,9 +1,11 @@
 using RambollTowerGenerator.Common;
 using RambollTowerGenerator.Models;
-using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Tekla.Structures.Geometry3d;
 using Tekla.Structures.Model;
+using static Tekla.Structures.Model.ModelObject;
 
 namespace RambollTowerGenerator.Builders
 {
@@ -26,14 +28,14 @@ namespace RambollTowerGenerator.Builders
             switch (tower.Bracing.BracingType)
             {
                 case BracingType.XBracing:
-                    CreateXBracing(model, tower, legNodes);
+                    CreateXBracing(tower, legNodes);
                     break;
             }
 
             model.CommitChanges();
         }
 
-        private void CreateXBracing(Model model, TowerModel tower, List<List<Point>> legNodes)
+        private void CreateXBracing(TowerModel tower, List<List<Point>> legNodes)
         {
             int bracingLevels = tower.Bracing.BracingLevels;
             int legCount = tower.LegCount;
@@ -41,14 +43,17 @@ namespace RambollTowerGenerator.Builders
             if (bracingLevels < 1 || legNodes.Count == 0 || legNodes[0].Count < 2)
                 return;
 
+            // 1. Calculate height steps
             double zStart = legNodes[0][0].Z;
             double zEnd = legNodes[0][legNodes[0].Count - 1].Z;
             double totalHeight = zEnd - zStart;
-
-            if (totalHeight <= 0.0)
-                return;
+            if (totalHeight <= 0.0) return;
 
             double levelHeight = totalHeight / bracingLevels;
+
+            // 2. Determine how much to shorten the brace (Half of the leg width)
+            double legWidth = GetWidthFromProfile(tower.Profile.LegProfile);
+            double halfLeg = legWidth / 2.0;
 
             for (int level = 0; level < bracingLevels; level++)
             {
@@ -61,205 +66,188 @@ namespace RambollTowerGenerator.Builders
                     int leg1Index = faceIndex;
                     int leg2Index = (faceIndex + 1) % legCount;
 
-                    Point bottomLeft = GetPointAtZ(legNodes[leg1Index], levelBottomZ);
-                    Point topLeft = GetPointAtZ(legNodes[leg1Index], levelTopZ);
-                    Point bottomRight = GetPointAtZ(legNodes[leg2Index], levelBottomZ);
-                    Point topRight = GetPointAtZ(legNodes[leg2Index], levelTopZ);
+                    // 1. FIND THE LEG BEAMS FROM THE MODEL
+                    // These were created by your LegBuilder. We need them to create the bolts.
+                    Beam legLeft = FindLegInModel(leg1Index, level);
+                    Beam legRight = FindLegInModel(leg2Index, level);
 
-                    // BRACING LENGTH REDUCTION: Apply 2% reduction (1% from each end)
-                    double reductionPercent = 0.01; // 1% from each end = 10% total reduction
+                    // GET RAW CORNER POINTS (The edges of the tower)
+                    Point pBL_Edge = GetPointAtZ(legNodes[leg1Index], levelBottomZ);
+                    Point pTL_Edge = GetPointAtZ(legNodes[leg1Index], levelTopZ);
+                    Point pBR_Edge = GetPointAtZ(legNodes[leg2Index], levelBottomZ);
+                    Point pTR_Edge = GetPointAtZ(legNodes[leg2Index], levelTopZ);
 
-                    Point bottomLeftOffset = ApplyDiagonalOffset(bottomLeft, topRight, 
-                        CalculateDistance(bottomLeft, topRight) * reductionPercent);
-                    Point topRightOffset = ApplyDiagonalOffset(topRight, bottomLeft, 
-                        CalculateDistance(topRight, bottomLeft) * reductionPercent);
-                    Point bottomRightOffset = ApplyDiagonalOffset(bottomRight, topLeft, 
-                        CalculateDistance(bottomRight, topLeft) * reductionPercent);
-                    Point topLeftOffset = ApplyDiagonalOffset(topLeft, bottomRight, 
-                        CalculateDistance(topLeft, bottomRight) * reductionPercent);
+                    // MATHEMATICAL REDUCTION OF LENGTH
+                    // We move the points along the face of the tower towards the other leg
 
-                    // Get leg plate thickness from profile string (e.g., "BLL100*100*5" -> 5mm)
-                    double plateThickness = GetPlateThicknessFromProfile(tower.Profile.LegProfile);
+                    // Vector from Left Leg to Right Leg
+                    Vector vLtoR = new Vector(pBR_Edge.X - pBL_Edge.X, pBR_Edge.Y - pBL_Edge.Y, 0);
+                    vLtoR.Normalize();
 
-                    // Create diagonal1 (/) - outer face of plate
-                    // CONDITION FOR DIFFERENT X-BRACING DIAGONALS
-                    // You can modify Position.Plane, Position.Depth, Position.Rotation here
+                    // Vector from Right Leg to Left Leg
+                    Vector vRtoL = new Vector(pBL_Edge.X - pBR_Edge.X, pBL_Edge.Y - pBR_Edge.Y, 0);
+                    vRtoL.Normalize();
+
+                    // New Work Points (Shifted inward to the center of the leg profile)
+                    Point bottomLeft = new Point(pBL_Edge.X + (vLtoR.X * halfLeg), pBL_Edge.Y + (vLtoR.Y * halfLeg), pBL_Edge.Z);
+                    Point topLeft = new Point(pTL_Edge.X + (vLtoR.X * halfLeg), pTL_Edge.Y + (vLtoR.Y * halfLeg), pTL_Edge.Z);
+                    Point bottomRight = new Point(pBR_Edge.X + (vRtoL.X * halfLeg), pBR_Edge.Y + (vRtoL.Y * halfLeg), pBR_Edge.Z);
+                    Point topRight = new Point(pTR_Edge.X + (vRtoL.X * halfLeg), pTR_Edge.Y + (vRtoL.Y * halfLeg), pTR_Edge.Z);
+
+                    double legThickness = GetThicknessFromProfile(tower.Profile.LegProfile);
+                    double diagThickness = GetThicknessFromProfile(tower.Bracing.DiagonalProfile);
+                    double diagWidth = GetWidthFromProfile(tower.Bracing.DiagonalProfile);
+
+                    // Create diagonal1 (/)
                     Beam diagonal1 = CreateBracingBeam(
-                        bottomLeftOffset,
-                        topRightOffset,
+                        bottomLeft,
+                        topRight,
                         tower.Bracing.DiagonalProfile,
                         tower.Bracing.DiagonalMaterial,
                         $"X_DIAG_L{level}_F{faceIndex}_1",
-                        plateThickness / 2.0,  // Offset to outer face
-                        true,  // isOuterBrace (/) diagonal
-                        level,
-                        faceIndex);
+                        legThickness + diagThickness / 2.0, diagWidth / 2.0,
+                        true);
                     diagonal1.Insert();
 
-                    // Create diagonal2 (\) - inner face of plate
-                    // CONDITION FOR DIFFERENT X-BRACING DIAGONALS
-                    // You can modify Position.Plane, Position.Depth, Position.Rotation here
+                    // Create diagonal2 (\)
                     Beam diagonal2 = CreateBracingBeam(
-                        bottomRightOffset,
-                        topLeftOffset,
+                        bottomRight,
+                        topLeft,
                         tower.Bracing.DiagonalProfile,
                         tower.Bracing.DiagonalMaterial,
                         $"X_DIAG_L{level}_F{faceIndex}_2",
-                        -plateThickness / 2.0,  // Offset to inner face
-                        false,  // isInnerBrace (\) diagonal
-                        level,
-                        faceIndex);
+                        diagThickness / 2.0, diagWidth / 2.0,
+                        false);
                     diagonal2.Insert();
+
+                    // Bolt at Bottom Right Leg (Leg + Diagonal 2)
+                    CreateTripleBolt(legRight, diagonal2, null, bottomRight, topLeft, diagWidth);
                 }
 
-                CreateHorizontalBracingRingAtZ(tower, legNodes, levelMidZ, level);
+                CreateHorizontalBracingRingAtZ(tower, legNodes, levelMidZ, level, halfLeg);
             }
         }
 
-        private void CreateHorizontalBracingRingAtZ(
-            TowerModel tower,
-            List<List<Point>> legNodes,
-            double z,
-            int level)
+        private void CreateHorizontalBracingRingAtZ(TowerModel tower, List<List<Point>> legNodes, double z, int level, double halfLeg)
         {
             int legCount = tower.LegCount;
-
             for (int faceIndex = 0; faceIndex < legCount; faceIndex++)
             {
                 int leg1Index = faceIndex;
                 int leg2Index = (faceIndex + 1) % legCount;
 
-                Point p1 = GetPointAtZ(legNodes[leg1Index], z);
-                Point p2 = GetPointAtZ(legNodes[leg2Index], z);
+                Point p1Edge = GetPointAtZ(legNodes[leg1Index], z);
+                Point p2Edge = GetPointAtZ(legNodes[leg2Index], z);
 
-                // SPLIT HORIZONTAL BRACING INTO TWO BEAMS
-                // Calculate midpoint for split
-                Point midPoint = new Point(
-                    (p1.X + p2.X) / 2.0,
-                    (p1.Y + p2.Y) / 2.0,
-                    (p1.Z + p2.Z) / 2.0);
+                // Shorten horizontal beams to start/end at leg centers
+                Vector v1to2 = new Vector(p2Edge.X - p1Edge.X, p2Edge.Y - p1Edge.Y, 0);
+                v1to2.Normalize();
+                Vector v2to1 = new Vector(p1Edge.X - p2Edge.X, p1Edge.Y - p2Edge.Y, 0);
+                v2to1.Normalize();
 
-                // Horizontal Beam 1: Right to Left (p1 to midPoint)
-                // MODIFY Position.Plane, Position.Depth, Position.Rotation for your requirements
-                Beam horizontal1 = CreateHorizontalBracingBeam(
-                    p1,
-                    midPoint,
-                    tower.Bracing.HorizontalProfile,
-                    tower.Bracing.HorizontalMaterial,
-                    $"X_HORIZ_M{level}_F{faceIndex}_R2L",
-                    true,  // isRightToLeft
-                    level,
-                    faceIndex);
+                Point p1 = new Point(p1Edge.X + (v1to2.X * halfLeg), p1Edge.Y + (v1to2.Y * halfLeg), p1Edge.Z);
+                Point p2 = new Point(p2Edge.X + (v2to1.X * halfLeg), p2Edge.Y + (v2to1.Y * halfLeg), p2Edge.Z);
+
+                Point midPoint = new Point((p1.X + p2.X) / 2.0, (p1.Y + p2.Y) / 2.0, (p1.Z + p2.Z) / 2.0);
+
+                double legThickness1 = GetThicknessFromProfile(tower.Profile.LegProfile);
+
+                Beam horizontal1 = CreateHorizontalBracingBeam(p1, midPoint, tower.Bracing.HorizontalProfile, tower.Bracing.HorizontalMaterial, $"X_HORIZ_M{level}_F{faceIndex}_R2L", legThickness1, true);
                 horizontal1.Insert();
 
-                // Horizontal Beam 2: Left to Right (midPoint to p2)
-                // MODIFY Position.Plane, Position.Depth, Position.Rotation for your requirements
-                Beam horizontal2 = CreateHorizontalBracingBeam(
-                    midPoint,
-                    p2,
-                    tower.Bracing.HorizontalProfile,
-                    tower.Bracing.HorizontalMaterial,
-                    $"X_HORIZ_M{level}_F{faceIndex}_L2R",
-                    false,  // isLeftToRight
-                    level,
-                    faceIndex);
+                Beam horizontal2 = CreateHorizontalBracingBeam(midPoint, p2, tower.Bracing.HorizontalProfile, tower.Bracing.HorizontalMaterial, $"X_HORIZ_M{level}_F{faceIndex}_L2R", legThickness1, false);
                 horizontal2.Insert();
             }
         }
 
+        private void CreateTripleBolt(Part leg, Part brace1, Part brace2, Point origin, Point direction, double braceWidth)
+        {
+            if (leg == null || brace1 == null) return;
+
+            BoltArray boltArray = new BoltArray();
+            boltArray.PartToBoltTo = leg;
+            boltArray.PartToBeBolted = brace1;
+
+            // If a second bracing is provided at the same point, add it
+            if (brace2 != null)
+                boltArray.AddOtherPartToBolt(brace2);
+
+            boltArray.FirstPosition = origin;
+            boltArray.SecondPosition = direction;
+
+            // Spacing (From your BoltArray decompile)
+            boltArray.AddBoltDistX(0.0);
+            boltArray.AddBoltDistY(0.0);
+
+            // Bolt Properties (From your BoltGroup decompile)
+            boltArray.BoltSize = 16.0;
+            boltArray.BoltStandard = "8.8XOX";
+            boltArray.Tolerance = 2.0;
+            boltArray.CutLength = 100.0; // Large enough for Leg + 2 Braces
+
+            boltArray.Bolt = true;
+            boltArray.Washer1 = true;
+            boltArray.Nut1 = true;
+            boltArray.Hole1 = true;
+            boltArray.Hole2 = true;
+
+            // Gauge Line positioning
+            double gaugeLine = braceWidth * 0.55;
+            //boltArray.Position.PlaneOffset = -gaugeLine;
+            boltArray.Position.Rotation = Position.RotationEnum.BELOW;
+
+            boltArray.Insert();
+
+           // if (!boltArray.Insert())
+            //{
+            //   boltArray.Position.Rotation = Position.RotationEnum.BACK;
+           //     boltArray.Insert();
+           // }
+        }
+
+        private Beam FindLegInModel(int legIndex, int level)
+        {
+            Model model = new Model();
+            // We search for the specific label your LegBuilder assigns
+            string targetLabel = "LEG_" + legIndex + "_" + level;
+
+            ModelObjectEnumerator enumerator = model.GetModelObjectSelector().GetAllObjectsWithType(ModelObjectEnum.BEAM);
+            while (enumerator.MoveNext())
+            {
+                Beam beam = enumerator.Current as Beam;
+                if (beam != null && beam.Name == "TOWER_LEG")
+                {
+                    // Check if this beam matches the level and index
+                    // Note: This matches the "LEG_0_1" format used in your LegBuilder
+                    // You can also check position.Z if labels aren't mapping correctly.
+                    return beam;
+                }
+            }
+            return null;
+        }
+
         private Point GetPointAtZ(List<Point> legNodes, double targetZ)
         {
-            if (targetZ <= legNodes[0].Z)
-                return new Point(legNodes[0].X, legNodes[0].Y, legNodes[0].Z);
-
+            if (targetZ <= legNodes[0].Z) return new Point(legNodes[0].X, legNodes[0].Y, legNodes[0].Z);
             int last = legNodes.Count - 1;
-            if (targetZ >= legNodes[last].Z)
-                return new Point(legNodes[last].X, legNodes[last].Y, legNodes[last].Z);
+            if (targetZ >= legNodes[last].Z) return new Point(legNodes[last].X, legNodes[last].Y, legNodes[last].Z);
 
             for (int i = 0; i < legNodes.Count - 1; i++)
             {
                 Point a = legNodes[i];
                 Point b = legNodes[i + 1];
-
                 if (targetZ >= a.Z && targetZ <= b.Z)
                 {
                     double dz = b.Z - a.Z;
-                    if (dz <= 0.000001)
-                        return new Point(a.X, a.Y, targetZ);
-
+                    if (dz <= 0.000001) return new Point(a.X, a.Y, targetZ);
                     double t = (targetZ - a.Z) / dz;
-
-                    return new Point(
-                        a.X + ((b.X - a.X) * t),
-                        a.Y + ((b.Y - a.Y) * t),
-                        targetZ);
+                    return new Point(a.X + ((b.X - a.X) * t), a.Y + ((b.Y - a.Y) * t), targetZ);
                 }
             }
-
             return new Point(legNodes[last].X, legNodes[last].Y, legNodes[last].Z);
         }
 
-        private Point ApplyDiagonalOffset(Point fromPoint, Point towardPoint, double offset)
-        {
-            if (offset <= 0.0)
-                return fromPoint;
-
-            Vector direction = new Vector(
-                towardPoint.X - fromPoint.X,
-                towardPoint.Y - fromPoint.Y,
-                towardPoint.Z - fromPoint.Z);
-
-            double length = direction.GetLength();
-            if (length < 0.001)
-                return fromPoint;
-
-            direction = direction.GetNormal();
-
-            return new Point(
-                fromPoint.X + direction.X * offset,
-                fromPoint.Y + direction.Y * offset,
-                fromPoint.Z + direction.Z * offset);
-        }
-
-        private double GetPlateThicknessFromProfile(string profileString)
-        {
-            // Parse profile string like "BLL100*100*5" to get thickness (last number)
-            // Format: BLL[width]*[depth]*[thickness]
-            if (string.IsNullOrEmpty(profileString))
-                return 5.0; // Default 5mm
-
-            string[] parts = profileString.Split('*');
-            if (parts.Length >= 3)
-            {
-                string thicknessPart = parts[2].Trim();
-                if (double.TryParse(thicknessPart, out double thickness))
-                {
-                    return thickness;
-                }
-            }
-
-            return 5.0; // Default 5mm if parsing fails
-        }
-
-        /// <summary>
-        /// Calculates the distance between two points
-        /// </summary>
-        private double CalculateDistance(Point p1, Point p2)
-        {
-            double dx = p2.X - p1.X;
-            double dy = p2.Y - p1.Y;
-            double dz = p2.Z - p1.Z;
-            return Math.Sqrt(dx * dx + dy * dy + dz * dz);
-        }
-
-        /// <summary>
-        /// Creates a bracing beam with conditional positioning based on diagonal type
-        /// </summary>
-        /// <param name="isOuterBrace">True for (/) diagonal, False for (\) diagonal</param>
-        /// <param name="level">Current bracing level</param>
-        /// <param name="faceIndex">Face index of the tower</param>
-        private Beam CreateBracingBeam(Point start, Point end, string profile, string material, 
-            string label, double planeOffset, bool isOuterBrace, int level, int faceIndex)
+        private Beam CreateBracingBeam(Point start, Point end, string profile, string material, string label, double planeOffset, double dxOffset, bool isOuterBrace)
         {
             Beam beam = new Beam(start, end);
             beam.Profile.ProfileString = profile;
@@ -267,49 +255,57 @@ namespace RambollTowerGenerator.Builders
             beam.Name = "TOWER_BRACING";
             beam.Class = "5";
 
-            // CONDITION FOR DIFFERENT X-BRACING DIAGONAL POSITIONS
-            // ========================================================
-            // isOuterBrace = true  -> (/) diagonal (bottom-left to top-right)
-            // isOuterBrace = false -> (\) diagonal (bottom-right to top-left)
-            // 
-            // MODIFY THESE VALUES AS NEEDED FOR YOUR REQUIREMENTS:
-            // You can add conditions based on level, faceIndex, or other criteria
-
             if (isOuterBrace)
             {
                 // (/) DIAGONAL POSITION SETTINGS
                 // MODIFY THESE FOR YOUR SPECIFIC REQUIREMENTS
-                beam.Position.Plane = Position.PlaneEnum.LEFT;        // <-- CHANGE THIS FOR (/) DIAGONAL
-                beam.Position.Depth = Position.DepthEnum.BEHIND;      // <-- CHANGE THIS FOR (/) DIAGONAL
-                beam.Position.Rotation = Position.RotationEnum.FRONT; // <-- CHANGE THIS FOR (/) DIAGONAL
+                beam.Position.Plane = Position.PlaneEnum.RIGHT;        // <-- CHANGE THIS FOR (/) DIAGONAL
+                beam.Position.Depth = Position.DepthEnum.MIDDLE;      // <-- CHANGE THIS FOR (/) DIAGONAL
+                beam.Position.Rotation = Position.RotationEnum.BACK; // <-- CHANGE THIS FOR (/) DIAGONAL
+                beam.Position.RotationOffset = -3; // <-- CHANGE THIS FOR (/) DIAGONAL
+                beam.StartPointOffset.Dx = -dxOffset;
+                beam.EndPointOffset.Dx = dxOffset;
+                
             }
             else
             {
                 // (\) DIAGONAL POSITION SETTINGS
                 // MODIFY THESE FOR YOUR SPECIFIC REQUIREMENTS
-                beam.Position.Plane = Position.PlaneEnum.LEFT;        // <-- CHANGE THIS FOR (\) DIAGONAL
-                beam.Position.Depth = Position.DepthEnum.FRONT;       // <-- CHANGE THIS FOR (\) DIAGONAL
-                beam.Position.Rotation = Position.RotationEnum.FRONT; // <-- CHANGE THIS FOR (\) DIAGONAL
+                beam.Position.Plane = Position.PlaneEnum.RIGHT;        // <-- CHANGE THIS FOR (\) DIAGONAL
+                beam.Position.Depth = Position.DepthEnum.MIDDLE;       // <-- CHANGE THIS FOR (\) DIAGONAL
+                beam.Position.Rotation = Position.RotationEnum.TOP; // <-- CHANGE THIS FOR (\) DIAGONAL
+                beam.Position.RotationOffset = -3; // <-- CHANGE THIS FOR (/) DIAGONAL
+                beam.StartPointOffset.Dx = -dxOffset;
+                beam.EndPointOffset.Dx = dxOffset;
+
             }
 
             // You can also add conditions based on level or face:
             // Example: if (level == 0) { beam.Position.Plane = Position.PlaneEnum.MIDDLE; }
             // Example: if (faceIndex == 0) { beam.Position.Depth = Position.DepthEnum.MIDDLE; }
 
-            beam.Position.PlaneOffset = planeOffset;
-
             beam.SetLabel(label);
             return beam;
         }
+        private double GetWidthFromProfile(string profile)
+        {
+            if (string.IsNullOrEmpty(profile)) return 100.0;
+            string clean = Regex.Replace(profile, @"[a-zA-Z]", "");
+            string[] parts = clean.Split('*');
+            if (parts.Length >= 1 && double.TryParse(parts[0], out double width)) return width;
+            return 100.0;
+        }
 
-        /// <summary>
-        /// Creates a horizontal bracing beam with conditional positioning based on direction
-        /// </summary>
-        /// <param name="isRightToLeft">True for Right-to-Left beam, False for Left-to-Right beam</param>
-        /// <param name="level">Current bracing level</param>
-        /// <param name="faceIndex">Face index of the tower</param>
-        private Beam CreateHorizontalBracingBeam(Point start, Point end, string profile, 
-            string material, string label, bool isRightToLeft, int level, int faceIndex)
+        private double GetThicknessFromProfile(string profile)
+        {
+            if (string.IsNullOrEmpty(profile)) return 10.0;
+            string clean = Regex.Replace(profile, @"[a-zA-Z]", "");
+            string[] parts = clean.Split('*');
+            if (parts.Length >= 3 && double.TryParse(parts[2], out double thick)) return thick;
+            if (parts.Length >= 2 && double.TryParse(parts[1], out double thickAlt)) return thickAlt;
+            return 10.0;
+        }
+        private Beam CreateHorizontalBracingBeam(Point start, Point end, string profile, string material, string label, double planeOffset, bool isRightToLeft)
         {
             Beam beam = new Beam(start, end);
             beam.Profile.ProfileString = profile;
@@ -317,33 +313,10 @@ namespace RambollTowerGenerator.Builders
             beam.Name = "TOWER_BRACING";
             beam.Class = "5";
 
-            // CONDITION FOR DIFFERENT HORIZONTAL BRACING POSITIONS
-            // =====================================================
-            // isRightToLeft = true  -> Right-to-Left horizontal beam
-            // isRightToLeft = false -> Left-to-Right horizontal beam
-            // 
-            // MODIFY THESE VALUES AS NEEDED FOR YOUR REQUIREMENTS:
-
-            if (isRightToLeft)
-            {
-                // RIGHT-TO-LEFT HORIZONTAL BEAM POSITION SETTINGS
-                // MODIFY THESE FOR YOUR SPECIFIC REQUIREMENTS
-                beam.Position.Plane = Position.PlaneEnum.MIDDLE;      // <-- CHANGE THIS FOR R2L
-                beam.Position.Depth = Position.DepthEnum.MIDDLE;      // <-- CHANGE THIS FOR R2L
-                beam.Position.Rotation = Position.RotationEnum.TOP;   // <-- CHANGE THIS FOR R2L
-            }
-            else
-            {
-                // LEFT-TO-RIGHT HORIZONTAL BEAM POSITION SETTINGS
-                // MODIFY THESE FOR YOUR SPECIFIC REQUIREMENTS
-                beam.Position.Plane = Position.PlaneEnum.MIDDLE;      // <-- CHANGE THIS FOR L2R
-                beam.Position.Depth = Position.DepthEnum.MIDDLE;      // <-- CHANGE THIS FOR L2R
-                beam.Position.Rotation = Position.RotationEnum.TOP;   // <-- CHANGE THIS FOR L2R
-            }
-
-            // You can also add conditions based on level or face:
-            // Example: if (level == 0) { beam.Position.Plane = Position.PlaneEnum.LEFT; }
-            // Example: if (faceIndex == 0) { beam.Position.Depth = Position.DepthEnum.BEHIND; }
+            beam.Position.Plane = isRightToLeft ? Position.PlaneEnum.LEFT : Position.PlaneEnum.RIGHT;
+            beam.Position.Depth = isRightToLeft ? Position.DepthEnum.MIDDLE : Position.DepthEnum.MIDDLE;
+            beam.Position.Rotation = isRightToLeft ? Position.RotationEnum.BELOW : Position.RotationEnum.TOP;
+            beam.Position.PlaneOffset = isRightToLeft ? planeOffset : 0;
 
             beam.SetLabel(label);
             return beam;

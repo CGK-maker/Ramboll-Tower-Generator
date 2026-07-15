@@ -1,0 +1,315 @@
+﻿using RambollTowerGenerator.Common;
+using RambollTowerGenerator.Models;
+using System;
+using System.Collections.Generic;
+using Tekla.Structures.Geometry3d;
+using Tekla.Structures.Model;
+
+namespace RambollTowerGenerator.Builders
+{
+    public class BracingBuilder
+    {
+        private readonly CageLegGeometryBuilder _geometryBuilder;
+
+        public BracingBuilder()
+        {
+            _geometryBuilder = new CageLegGeometryBuilder();
+        }
+
+        public void CreateBracing(Model model, TowerModel tower)
+        {
+            if (tower.Bracing.BracingType == BracingType.None)
+                return;
+
+            List<List<Point>> legNodes = _geometryBuilder.BuildLegNodes(tower);
+
+            switch (tower.Bracing.BracingType)
+            {
+                case BracingType.XBracing:
+                    CreateXBracing(tower, legNodes);
+                    break;
+            }
+
+            model.CommitChanges();
+        }
+
+        private void CreateXBracing(TowerModel tower, List<List<Point>> legNodes)
+        {
+            int bracingLevels = tower.Bracing.BracingLevels;
+            int legCount = tower.LegCount;
+
+            if (bracingLevels < 1 || legNodes.Count == 0 || legNodes[0].Count < 2)
+                return;
+
+            double zStart = legNodes[0][0].Z;
+            double zEnd = legNodes[0][legNodes[0].Count - 1].Z;
+            double totalHeight = zEnd - zStart;
+
+            if (totalHeight <= 0.0)
+                return;
+
+            double levelHeight = totalHeight / bracingLevels;
+
+            for (int level = 0; level < bracingLevels; level++)
+            {
+                double levelBottomZ = zStart + (level * levelHeight);
+                double levelTopZ = (level == bracingLevels - 1) ? zEnd : zStart + ((level + 1) * levelHeight);
+                double levelMidZ = (levelBottomZ + levelTopZ) / 2.0;
+
+                for (int faceIndex = 0; faceIndex < legCount; faceIndex++)
+                {
+                    int leg1Index = faceIndex;
+                    int leg2Index = (faceIndex + 1) % legCount;
+
+                    Point bottomLeft = GetPointAtZ(legNodes[leg1Index], levelBottomZ);
+                    Point topLeft = GetPointAtZ(legNodes[leg1Index], levelTopZ);
+                    Point bottomRight = GetPointAtZ(legNodes[leg2Index], levelBottomZ);
+                    Point topRight = GetPointAtZ(legNodes[leg2Index], levelTopZ);
+
+                    // Get leg plate thickness from profile string (e.g., "BLL100*100*5" -> 5mm)
+                    double plateThickness = GetPlateThicknessFromProfile(tower.Profile.LegProfile);
+                    double diagonalPlateThickness = GetPlateThicknessFromProfile(tower.Bracing.DiagonalProfile);
+                    double diagonallength = GetPlatelengthFromProfile(tower.Bracing.DiagonalProfile);
+
+                    // Create diagonal1 (/) - outer face of plate
+                    // CONDITION FOR DIFFERENT X-BRACING DIAGONALS
+                    // You can modify Position.Plane, Position.Depth, Position.Rotation here
+                    Beam diagonal1 = CreateBracingBeam(
+                        bottomLeft,
+                        topRight,
+                        tower.Bracing.DiagonalProfile,
+                        tower.Bracing.DiagonalMaterial,
+                        $"X_DIAG_L{level}_F{faceIndex}_1",
+                        plateThickness,diagonallength / 2.0,  // Offset to outer face
+                        true);  // isOuterBrace (/) diagonal
+                    diagonal1.Insert();
+
+                    // Create diagonal2 (\) - inner face of plate
+                    // CONDITION FOR DIFFERENT X-BRACING DIAGONALS
+                    // You can modify Position.Plane, Position.Depth, Position.Rotation here
+                    Beam diagonal2 = CreateBracingBeam(
+                        bottomRight,
+                        topLeft,
+                        tower.Bracing.DiagonalProfile,
+                        tower.Bracing.DiagonalMaterial,
+                        $"X_DIAG_L{level}_F{faceIndex}_2",
+                        plateThickness + diagonalPlateThickness,diagonallength / 2.0,  // Offset to inner face
+                        false);  // isInnerBrace (\) diagonal
+                    diagonal2.Insert();
+                }
+
+                CreateHorizontalBracingRingAtZ(tower, legNodes, levelMidZ, level);
+            }
+        }
+
+        private void CreateHorizontalBracingRingAtZ(
+            TowerModel tower,
+            List<List<Point>> legNodes,
+            double z,
+            int level)
+        {
+            int legCount = tower.LegCount;
+
+            for (int faceIndex = 0; faceIndex < legCount; faceIndex++)
+            {
+                int leg1Index = faceIndex;
+                int leg2Index = (faceIndex + 1) % legCount;
+
+                Point p1 = GetPointAtZ(legNodes[leg1Index], z);
+                Point p2 = GetPointAtZ(legNodes[leg2Index], z);
+
+                // SPLIT HORIZONTAL BRACING INTO TWO BEAMS
+                // Calculate midpoint for split
+                Point midPoint = new Point(
+                    (p1.X + p2.X) / 2.0,
+                    (p1.Y + p2.Y) / 2.0,
+                    (p1.Z + p2.Z) / 2.0);
+
+                // Horizontal Beam 1: Right to Left (p1 to midPoint)
+                // MODIFY Position.Plane, Position.Depth, Position.Rotation for your requirements
+                Beam horizontal1 = CreateHorizontalBracingBeam(
+                    p1,
+                    midPoint,
+                    tower.Bracing.HorizontalProfile,
+                    tower.Bracing.HorizontalMaterial,
+                    $"X_HORIZ_M{level}_F{faceIndex}_R2L",
+                    true);  // isRightToLeft
+                horizontal1.Insert();
+
+                // Horizontal Beam 2: Left to Right (midPoint to p2)
+                // MODIFY Position.Plane, Position.Depth, Position.Rotation for your requirements
+                Beam horizontal2 = CreateHorizontalBracingBeam(
+                    midPoint,
+                    p2,
+                    tower.Bracing.HorizontalProfile,
+                    tower.Bracing.HorizontalMaterial,
+                    $"X_HORIZ_M{level}_F{faceIndex}_L2R",
+                    false);  // isLeftToRight
+                horizontal2.Insert();
+            }
+        }
+
+        private Point GetPointAtZ(List<Point> legNodes, double targetZ)
+        {
+            if (targetZ <= legNodes[0].Z)
+                return new Point(legNodes[0].X, legNodes[0].Y, legNodes[0].Z);
+
+            int last = legNodes.Count - 1;
+            if (targetZ >= legNodes[last].Z)
+                return new Point(legNodes[last].X, legNodes[last].Y, legNodes[last].Z);
+
+            for (int i = 0; i < legNodes.Count - 1; i++)
+            {
+                Point a = legNodes[i];
+                Point b = legNodes[i + 1];
+
+                if (targetZ >= a.Z && targetZ <= b.Z)
+                {
+                    double dz = b.Z - a.Z;
+                    if (dz <= 0.000001)
+                        return new Point(a.X, a.Y, targetZ);
+
+                    double t = (targetZ - a.Z) / dz;
+
+                    return new Point(
+                        a.X + ((b.X - a.X) * t),
+                        a.Y + ((b.Y - a.Y) * t),
+                        targetZ);
+                }
+            }
+
+            return new Point(legNodes[last].X, legNodes[last].Y, legNodes[last].Z);
+        }
+
+        private double GetPlateThicknessFromProfile(string profileString)
+        {
+            // Parse profile string like "BLL100*100*5" to get thickness (last number)
+            // Format: BLL[width]*[depth]*[thickness]
+            if (string.IsNullOrEmpty(profileString))
+                return 5.0; // Default 5mm
+
+            string[] parts = profileString.Split('*');
+            if (parts.Length >= 3)
+            {
+                string thicknessPart = parts[2].Trim();
+                if (double.TryParse(thicknessPart, out double thickness))
+                {
+                    return thickness;
+                }
+            }
+
+            return 5.0; // Default 5mm if parsing fails
+        }
+
+        private double GetPlatelengthFromProfile(string profileString)
+        {
+            // Parse profile string like "BLL100*100*5" to get thickness (last number)
+            // Format: BLL[width]*[depth]*[thickness]
+            if (string.IsNullOrEmpty(profileString))
+                return 37.5; // Default 5mm
+
+            string[] parts = profileString.Split('*');
+            if (parts.Length >= 3)
+            {
+                string lengthpart = parts[1].Trim();
+                if (double.TryParse(lengthpart, out double length))
+                {
+                    return length;
+                }
+            }
+
+            return 37.5; // Default 5mm if parsing fails
+        }
+
+        /// <summary>
+        /// Creates a bracing beam with conditional positioning based on diagonal type
+        /// </summary>
+        /// <param name="isOuterBrace">True for (/) diagonal, False for (\) diagonal</param>
+        private Beam CreateBracingBeam(Point start, Point end, string profile, string material,
+            string label, double planeOffset,double xoffset, bool isOuterBrace)
+        {
+            Beam beam = new Beam(start, end);
+            beam.Profile.ProfileString = profile;
+            beam.Material.MaterialString = material;
+            beam.Name = "TOWER_BRACING";
+            beam.Class = "5";
+
+            // CONDITION FOR DIFFERENT X-BRACING DIAGONAL POSITIONS
+            // ========================================================
+            // isOuterBrace = true  -> (/) diagonal (bottom-left to top-right)
+            // isOuterBrace = false -> (\) diagonal (bottom-right to top-left)
+            // 
+            // MODIFY THESE VALUES AS NEEDED FOR YOUR REQUIREMENTS:
+            // You can add conditions based on level, faceIndex, or other criteria
+
+            if (isOuterBrace)
+            {
+                // (/) DIAGONAL POSITION SETTINGS
+                // MODIFY THESE FOR YOUR SPECIFIC REQUIREMENTS
+                beam.Position.Plane = Position.PlaneEnum.RIGHT;        // <-- CHANGE THIS FOR (/) DIAGONAL
+                beam.Position.Rotation = Position.RotationEnum.BACK; // <-- CHANGE THIS FOR (/) DIAGONAL
+                beam.Position.Depth = Position.DepthEnum.BEHIND;      // <-- CHANGE THIS FOR (/) DIAGONAL
+                beam.Position.PlaneOffset = planeOffset;
+                beam.StartPointOffset.Dx = - xoffset;
+                beam.EndPointOffset.Dx = xoffset;
+            }
+            else
+            {
+                // (\) DIAGONAL POSITION SETTINGS
+                // MODIFY THESE FOR YOUR SPECIFIC REQUIREMENTS
+                beam.Position.Plane = Position.PlaneEnum.RIGHT;        // <-- CHANGE THIS FOR (\) DIAGONAL
+                beam.Position.Depth = Position.DepthEnum.MIDDLE;       // <-- CHANGE THIS FOR (\) DIAGONAL
+                beam.Position.Rotation = Position.RotationEnum.BACK; // <-- CHANGE THIS FOR (\) DIAGONAL
+                beam.Position.PlaneOffset = planeOffset;
+                beam.StartPointOffset.Dx = - xoffset;
+                beam.EndPointOffset.Dx = xoffset;
+            }
+
+            beam.SetLabel(label);
+            return beam;
+        }
+
+        /// <summary>
+        /// Creates a horizontal bracing beam with conditional positioning based on direction
+        /// </summary>
+        /// <param name="isRightToLeft">True for Right-to-Left beam, False for Left-to-Right beam</param>
+        private Beam CreateHorizontalBracingBeam(Point start, Point end, string profile,
+            string material, string label, bool isRightToLeft)
+        {
+            Beam beam = new Beam(start, end);
+            beam.Profile.ProfileString = profile;
+            beam.Material.MaterialString = material;
+            beam.Name = "TOWER_BRACING";
+            beam.Class = "5";
+
+            // CONDITION FOR DIFFERENT HORIZONTAL BRACING POSITIONS
+            // =====================================================
+            // isRightToLeft = true  -> Right-to-Left horizontal beam
+            // isRightToLeft = false -> Left-to-Right horizontal beam
+            // 
+            // MODIFY THESE VALUES AS NEEDED FOR YOUR REQUIREMENTS:
+
+            if (isRightToLeft)
+            {
+                // LEFT-TO-RIGHT HORIZONTAL BEAM POSITION SETTINGS
+                // MODIFY THESE FOR YOUR SPECIFIC REQUIREMENTS
+                beam.Position.Plane = Position.PlaneEnum.LEFT;      // <-- CHANGE THIS FOR L2R
+                beam.Position.Rotation = Position.RotationEnum.FRONT;   // <-- CHANGE THIS FOR L2R
+                beam.Position.Depth = Position.DepthEnum.BEHIND;      // <-- CHANGE THIS FOR L2R
+
+            }
+            else
+            {
+                // RIGHT-TO-LEFT HORIZONTAL BEAM POSITION SETTINGS
+                // MODIFY THESE FOR YOUR SPECIFIC REQUIREMENTS
+                beam.Position.Plane = Position.PlaneEnum.RIGHT;      // <-- CHANGE THIS FOR R2L
+                beam.Position.Rotation = Position.RotationEnum.TOP;   // <-- CHANGE THIS FOR R2L
+                beam.Position.Depth = Position.DepthEnum.MIDDLE;      // <-- CHANGE THIS FOR R2L
+
+            }
+
+            beam.SetLabel(label);
+            return beam;
+        }
+    }
+}

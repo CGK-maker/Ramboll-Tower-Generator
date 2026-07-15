@@ -49,12 +49,3 @@ C:\Users\GKAR\source\repos\RambollTowerGenerator\RambollTowerGenerator\obj\Debug
 C:\Users\GKAR\source\repos\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\RambollT.66BD25BF.Up2Date
 C:\Users\GKAR\source\repos\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\RambollTowerGenerator.dll
 C:\Users\GKAR\source\repos\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\RambollTowerGenerator.pdb
-C:\Users\GKAR\source\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\RambollTowerGenerator.csproj.AssemblyReference.cache
-C:\Users\GKAR\source\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\Views\MainWindow.baml
-C:\Users\GKAR\source\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\Views\MainWindow.g.cs
-C:\Users\GKAR\source\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\RambollTowerGenerator_MarkupCompile.cache
-C:\Users\GKAR\source\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\RambollTowerGenerator.g.resources
-C:\Users\GKAR\source\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\RambollTowerGenerator.csproj.CoreCompileInputs.cache
-C:\Users\GKAR\source\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\RambollTowerGenerator.dll
-C:\Users\GKAR\source\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\RambollTowerGenerator.pdb
-C:\Users\GKAR\source\RambollTowerGenerator\RambollTowerGenerator\obj\Debug\RambollT.66BD25BF.Up2Date

@@ -92,7 +92,6 @@
   <ItemGroup>
     <Compile Include="Builders\BracingBuilder.cs" />
     <Compile Include="Builders\CageLegGeometryBuilder.cs" />
-    <Compile Include="Builders\JointBuilder.cs" />
     <Compile Include="Builders\LegBuilder.cs" />
     <Compile Include="Common\BracingType.cs" />
     <Compile Include="Common\CageType.cs" />

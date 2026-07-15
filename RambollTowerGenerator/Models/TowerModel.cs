@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using RambollTowerGenerator.Common;
+﻿using RambollTowerGenerator.Common;
 using Tekla.Structures.Geometry3d;
-using Tekla.Structures.Model;
 
 namespace RambollTowerGenerator.Models
 {
@@ -15,8 +13,6 @@ namespace RambollTowerGenerator.Models
         public JointModel Joint { get; }
         public CageModel Cage { get; }
 
-        public List<List<Beam>> LegBeams { get; }
-
         public int LegCount
         {
             get { return TowerType == TowerType.ThreeLeg ? 3 : 4; }
@@ -29,7 +25,6 @@ namespace RambollTowerGenerator.Models
             Profile = new ProfileModel();
             Joint = new JointModel();
             Cage = new CageModel();
-            LegBeams = new List<List<Beam>>();
         }
     }
 }

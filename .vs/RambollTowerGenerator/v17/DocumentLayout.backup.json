@@ -1,54 +1,14 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\",
+  "WorkspaceRootPath": "C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|c:\\users\\gkar\\source\\rambolltowergenerator\\rambolltowergenerator\\builders\\jointbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\builders\\jointbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\builders\\bracingbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|c:\\users\\gkar\\source\\repos\\rambolltowergenerator\\rambolltowergenerator\\builders\\bracingbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\builders\\bracingbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\views\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\views\\mainwindow.xaml||{F11ACC28-31D1-4C80-A34B-F4E09D3D753C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\views\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\views\\mainwindow.xaml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\viewmodels\\mainviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\builders\\legbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\rambolltowergenerator\\builders\\legbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\builders\\legbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\models\\towermodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\models\\towermodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\models\\jointmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\models\\jointmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\models\\profilemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\models\\profilemodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\models\\geometrymodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\models\\geometrymodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\models\\towerplugindata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\models\\towerplugindata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\RambollTowerGenerator\\rambolltowergenerator\\models\\bracingmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\models\\bracingmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -61,156 +21,29 @@
           "SelectedChildIndex": 1,
           "Children": [
             {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "LegBuilder.cs",
+              "DocumentMoniker": "C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\LegBuilder.cs",
+              "RelativeDocumentMoniker": "RambollTowerGenerator\\Builders\\LegBuilder.cs",
+              "ToolTip": "C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\LegBuilder.cs",
+              "RelativeToolTip": "RambollTowerGenerator\\Builders\\LegBuilder.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAABHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-10T10:30:21.41Z"
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "JointBuilder.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\JointBuilder.cs",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\Builders\\JointBuilder.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\JointBuilder.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\Builders\\JointBuilder.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAHMAAABQAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-08T04:51:26.575Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{269a02dc-6af8-11d3-bdc4-00c04f688e50}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "BracingModel.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\BracingModel.cs",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\Models\\BracingModel.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\BracingModel.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\Models\\BracingModel.cs",
-              "ViewState": "AgIAAA0AAAAAAAAAAABQwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-08T08:11:01.651Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "MainWindow.xaml.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Views\\MainWindow.xaml.cs",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\Views\\MainWindow.xaml.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Views\\MainWindow.xaml.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\Views\\MainWindow.xaml.cs",
-              "ViewState": "AgIAAJ0AAAAAAAAAAAAUwLQAAAAVAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-08T05:55:18.528Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
               "Title": "BracingBuilder.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\BracingBuilder.cs",
+              "DocumentMoniker": "C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\BracingBuilder.cs",
               "RelativeDocumentMoniker": "RambollTowerGenerator\\Builders\\BracingBuilder.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\BracingBuilder.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\Builders\\BracingBuilder.cs",
-              "ViewState": "AgIAADYBAAAAAAAAAAAUwGABAAAAAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\GKAR\\source\\repos\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\BracingBuilder.cs*",
+              "RelativeToolTip": "RambollTowerGenerator\\Builders\\BracingBuilder.cs*",
+              "ViewState": "AgIAAE0BAAAAAAAAAAAxwJIAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-07T05:23:00.077Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "MainWindow.xaml",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Views\\MainWindow.xaml",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\Views\\MainWindow.xaml",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Views\\MainWindow.xaml",
-              "RelativeToolTip": "RambollTowerGenerator\\Views\\MainWindow.xaml",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003549|",
-              "WhenOpened": "2026-07-07T06:37:40.631Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "MainViewModel.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\ViewModels\\MainViewModel.cs",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\ViewModels\\MainViewModel.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\ViewModels\\MainViewModel.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\ViewModels\\MainViewModel.cs",
-              "ViewState": "AgIAACgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-08T05:55:28.458Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "LegBuilder.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\LegBuilder.cs",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\Builders\\LegBuilder.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Builders\\LegBuilder.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\Builders\\LegBuilder.cs",
-              "ViewState": "AgIAAFUAAAAAAAAAAAAQwHMAAABDAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-05T17:16:18.746Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "TowerPluginData.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\TowerPluginData.cs",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\Models\\TowerPluginData.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\TowerPluginData.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\Models\\TowerPluginData.cs",
-              "ViewState": "AgIAADgAAAAAAAAAAABBwAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-08T05:56:03.577Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "JointModel.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\JointModel.cs",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\Models\\JointModel.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\JointModel.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\Models\\JointModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-08T05:53:26.981Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "GeometryModel.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\GeometryModel.cs",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\Models\\GeometryModel.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\GeometryModel.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\Models\\GeometryModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-07T11:58:39.124Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "TowerModel.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\TowerModel.cs",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\Models\\TowerModel.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\TowerModel.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\Models\\TowerModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-07T05:35:53.737Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "ProfileModel.cs",
-              "DocumentMoniker": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\ProfileModel.cs",
-              "RelativeDocumentMoniker": "RambollTowerGenerator\\Models\\ProfileModel.cs",
-              "ToolTip": "C:\\Users\\GKAR\\source\\RambollTowerGenerator\\RambollTowerGenerator\\Models\\ProfileModel.cs",
-              "RelativeToolTip": "RambollTowerGenerator\\Models\\ProfileModel.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-05T17:43:17.803Z"
+              "WhenOpened": "2026-07-07T05:23:00.077Z",
+              "EditorCaption": ""
             }
           ]
         }

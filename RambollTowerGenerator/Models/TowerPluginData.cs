@@ -5,91 +5,57 @@ namespace RambollTowerGenerator.Models
     public class TowerPluginData
     {
         [StructuresField("towertype")]
-        public int TowerType = 0;
+        public int TowerType;
 
         [StructuresField("profile")]
-        public string profile = "BLL100*100*5";
+        public string profile;
 
         [StructuresField("material")]
-        public string material = "STEEL_UNDEFINED";
+        public string material;
 
         [StructuresField("basewidth")]
-        public double basewidth = 5000.0;
+        public double basewidth;
 
         [StructuresField("topwidth")]
-        public double topwidth = 2400.0;
+        public double topwidth ;
 
         [StructuresField("segmentcount")]
-        public int segmentcount = 6;
+        public int segmentcount;
 
         [StructuresField("totalheight")]
-        public double totalheight = 30000.0;
-
-        [StructuresField("segmentgap")]
-        public double segmentgap = 3.0;
+        public double totalheight;
 
         [StructuresField("cagetype")]
-        public int cagetype = 0;
+        public int cagetype;
 
         [StructuresField("verticalheight")]
-        public double verticalheight = 0.0;
+        public double verticalheight;
 
         [StructuresField("vertsegcnt")]
-        public int verticalsegmentcount = 2;
+        public int verticalsegmentcount;
 
         [StructuresField("bracingtype")]
-        public int bracingtype = 1;
+        public int bracingtype;
 
         [StructuresField("diagprofile")]
-        public string diagprofile = "BLL100*100*5";
+        public string diagprofile;
 
         [StructuresField("diagmaterial")]
-        public string diagmaterial = "STEEL_UNDEFINED";
+        public string diagmaterial;
 
         [StructuresField("horizprofile")]
-        public string horizprofile = "BLL100*100*5";
+        public string horizprofile;
 
         [StructuresField("horizmaterial")]
-        public string horizmaterial = "STEEL_UNDEFINED";
+        public string horizmaterial;
 
         [StructuresField("bracinglevels")]
-        public int bracinglevels = 3;
+        public int bracinglevels;
 
-        // Joint/Splice fields
-        [StructuresField("spliceprofile")]
-        public string spliceprofile = "PL10";
+        [StructuresField("topoffset")]
+        public double topoffset;
 
-        [StructuresField("splicematerial")]
-        public string splicematerial = "STEEL_UNDEFINED";
-
-        [StructuresField("boltsize")]
-        public string boltsize = "M16";
-
-        [StructuresField("boltstandard")]
-        public string boltstandard = "8.8";
-
-        [StructuresField("spliceplatelength")]
-        public double spliceplatelength = 400.0;
-
-        [StructuresField("spliceplatewidth")]
-        public double spliceplatewidth = 100.0;
-
-        [StructuresField("spliceplatethick")]
-        public double spliceplatethick = 10.0;
-
-        [StructuresField("boltrows")]
-        public int boltrows = 2;
-
-        [StructuresField("boltsperrow")]
-        public int boltsperrow = 2;
-
-        [StructuresField("boltspacingx")]
-        public double boltspacingx = 60.0;
-
-        [StructuresField("boltspacingy")]
-        public double boltspacingy = 80.0;
-
-        [StructuresField("edgedistance")]
-        public double edgedistance = 40.0;
+        [StructuresField("bottomoffset")]
+        public double bottomoffset;
     }
 }
