@@ -3,12 +3,12 @@
   "WorkspaceRootPath": "C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|c:\\users\\gkar\\source\\repos\\ramboll-tower-generator\\rambolltowergenerator\\builders\\bracingbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\builders\\bracingbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|c:\\users\\gkar\\source\\repos\\ramboll-tower-generator\\rambolltowergenerator\\builders\\legbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\builders\\legbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\rambolltowergenerator\\builders\\legbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\builders\\legbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|c:\\users\\gkar\\source\\repos\\ramboll-tower-generator\\rambolltowergenerator\\builders\\bracingbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{489F6F90-CC72-437D-9D09-636C12BADA61}|RambollTowerGenerator\\RambollTowerGenerator.csproj|solutionrelative:rambolltowergenerator\\builders\\bracingbuilder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -18,7 +18,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
@@ -30,27 +30,28 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "LegBuilder.cs",
               "DocumentMoniker": "C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\RambollTowerGenerator\\Builders\\LegBuilder.cs",
               "RelativeDocumentMoniker": "RambollTowerGenerator\\Builders\\LegBuilder.cs",
               "ToolTip": "C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\RambollTowerGenerator\\Builders\\LegBuilder.cs",
               "RelativeToolTip": "RambollTowerGenerator\\Builders\\LegBuilder.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAABHAAAAAAAAAA==",
+              "ViewState": "AgIAAEsAAAAAAAAAAAASwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-10T10:30:21.41Z"
+              "WhenOpened": "2026-07-16T10:34:13.617Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "BracingBuilder.cs",
               "DocumentMoniker": "C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\RambollTowerGenerator\\Builders\\BracingBuilder.cs",
               "RelativeDocumentMoniker": "RambollTowerGenerator\\Builders\\BracingBuilder.cs",
               "ToolTip": "C:\\Users\\GKAR\\source\\repos\\Ramboll-Tower-Generator\\RambollTowerGenerator\\Builders\\BracingBuilder.cs",
               "RelativeToolTip": "RambollTowerGenerator\\Builders\\BracingBuilder.cs",
-              "ViewState": "AgIAANwAAAAAAAAAAAAcwAMBAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAD8BAAAAAAAAAAAEwOsAAAA+AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-07-07T05:23:00.077Z",
+              "WhenOpened": "2026-07-16T08:59:03.26Z",
               "EditorCaption": ""
             }
           ]

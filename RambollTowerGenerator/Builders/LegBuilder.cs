@@ -25,6 +25,9 @@ namespace RambollTowerGenerator.Builders
                 List<Point> nodes = legNodes[legIndex];
                 int segmentCount = nodes.Count - 1;
 
+                // Keep each segment beam so we can splice consecutive ones together afterwards.
+                List<Beam> legSegments = new List<Beam>();
+
                 for (int i = 0; i < segmentCount; i++)
                 {
                     Point start = nodes[i];
@@ -54,10 +57,45 @@ namespace RambollTowerGenerator.Builders
 
                     leg.SetLabel("LEG_" + legIndex + "_" + i);
                     leg.Insert();
+
+                    legSegments.Add(leg);
                 }
+
+                // Create a splice (system connection #175) at every joint between consecutive segments.
+                CreateLegSplices(legSegments);
             }
             model.CommitChanges();
         }
+
+        /// <summary>
+        /// Inserts Tekla system connection #175 (Splice) between each pair of consecutive
+        /// leg segments. The lower segment is the primary part, the upper segment is the
+        /// secondary. Tekla runs the same macro logic as if placed from the UI, automatically
+        /// picking up both legs via the primary/secondary objects.
+        /// </summary>
+        private void CreateLegSplices(List<Beam> legSegments)
+        {
+            for (int i = 0; i < legSegments.Count - 1; i++)
+            {
+                Beam lower = legSegments[i];
+                Beam upper = legSegments[i + 1];
+                if (lower == null || upper == null)
+                    continue;
+
+                Connection splice = new Connection();
+                splice.Name = "Splice";
+                splice.Number = 175;             // Tekla built-in splice connection macro number
+                splice.LoadAttributesFromFile("standard");
+
+                splice.SetPrimaryObject(lower);
+                splice.SetSecondaryObject(upper);
+
+                // Position the connection at the joint (upper segment's start point).
+                splice.SetAttribute("up_direction", 0);
+                splice.Insert();
+            }
+        }
+
 
         private void GetSegmentPointsWithGap(Point start, Point end, int segmentIndex, int totalSegments, double gap, out Point adjustedStart, out Point adjustedEnd)
         {

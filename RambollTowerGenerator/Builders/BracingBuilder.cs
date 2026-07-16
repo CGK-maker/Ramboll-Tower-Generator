@@ -229,7 +229,70 @@ namespace RambollTowerGenerator.Builders
 
                 Beam horizontal2 = CreateHorizontalBracingBeam(midPoint, p2, tower.Bracing.HorizontalProfile, tower.Bracing.HorizontalMaterial, $"X_HORIZ_M{level}_F{faceIndex}_L2R", legThickness1, false);
                 horizontal2.Insert();
+
+                // Cut the leg-side ends of each horizontal segment at 45 deg, 15 mm deep.
+                // horizontal1 meets the leg at p1 (its start); horizontal2 at p2 (its end).
+                CutBeamEnd45(horizontal1, midPoint, p1, 15.0);
+                CutBeamEnd45(horizontal2, midPoint, p2, 15.0);
             }
+        }
+
+        /// <summary>
+        /// Cuts a 45-degree chamfer of the given size at the beam end nearest <paramref name="endPoint"/>.
+        /// The cut plane is placed <paramref name="cutSize"/> mm in from the end and tilted 45 deg
+        /// relative to the beam axis, removing a triangular wedge from the end.
+        /// </summary>
+        private void CutBeamEnd45(Beam beam, Point endPoint, Point otherPoint, double cutSize)
+        {
+            if (beam == null) return;
+
+            // Beam axis direction pointing INWARD (from the end being cut towards the beam body).
+            Vector axisIn = new Vector(otherPoint.X - endPoint.X, otherPoint.Y - endPoint.Y, otherPoint.Z - endPoint.Z);
+            axisIn.Normalize();
+
+            // Point on the cut plane: cutSize mm in from the end along the beam axis.
+            Point planeOrigin = new Point(
+                endPoint.X + (axisIn.X * cutSize),
+                endPoint.Y + (axisIn.Y * cutSize),
+                endPoint.Z + (axisIn.Z * cutSize));
+
+            // Vertical reference so the 45 deg tilt is taken in the vertical plane of the beam.
+            Vector up = new Vector(0, 0, 1);
+
+            // In-plane horizontal direction perpendicular to the beam axis (the cut's width direction).
+            Vector across = Cross(axisIn, up);
+            if (across.GetLength() < 1e-6)
+                across = new Vector(1, 0, 0); // fallback for a vertical beam
+            across.Normalize();
+
+            // The cut plane normal is the beam axis rotated 45 deg towards 'up' => (axisIn + up)/sqrt(2).
+            // A CutPlane keeps the material on the negative side of its X-Y plane, so build a
+            // coordinate system whose Z (normal) points OUTWARD (towards the end) at 45 deg.
+            Vector normalOut = new Vector(-axisIn.X + up.X, -axisIn.Y + up.Y, -axisIn.Z + up.Z);
+            normalOut.Normalize();
+
+            // Plane axes: AxisX = 'across', AxisY = normalOut x across (so AxisX x AxisY = normalOut).
+            Vector axisX = across;
+            Vector axisY = Cross(normalOut, axisX);
+            axisY.Normalize();
+
+            CutPlane cut = new CutPlane();
+            cut.Father = beam;
+            cut.Plane = new Plane
+            {
+                Origin = planeOrigin,
+                AxisX = axisX,
+                AxisY = axisY
+            };
+            cut.Insert();
+        }
+
+        private static Vector Cross(Vector a, Vector b)
+        {
+            return new Vector(
+                (a.Y * b.Z) - (a.Z * b.Y),
+                (a.Z * b.X) - (a.X * b.Z),
+                (a.X * b.Y) - (a.Y * b.X));
         }
 
         private void CreateTripleBolt(Part leg, Part brace1, Part brace2, Point origin, Point direction, double braceWidth)
@@ -264,23 +327,9 @@ namespace RambollTowerGenerator.Builders
             boltArray.Hole1 = true;
             boltArray.Hole2 = true;
 
-            // Gauge Line positioning
-            //double gaugeLine = braceWidth * 0.55;
-            //boltArray.Position.PlaneOffset = -gaugeLine;
-
-            // Shaft now runs along the plane normal (the outward face / X axis) because
-            // FirstPosition->SecondPosition is the face tangent. Use FRONT/BACK to choose
-            // which side (+X or -X) the bolt points. FRONT/BACK flip the normal; TOP/BELOW
-            // would only spin the bolt around its own shaft (the effect you saw before).
             boltArray.Position.Rotation = Position.RotationEnum.BELOW;
 
             boltArray.Insert();
-
-           // if (!boltArray.Insert())
-            //{
-            //   boltArray.Position.Rotation = Position.RotationEnum.BACK;
-           //     boltArray.Insert();
-           // }
         }
 
         private Beam FindLegInModel(int legIndex, int level)
@@ -295,9 +344,6 @@ namespace RambollTowerGenerator.Builders
                 Beam beam = enumerator.Current as Beam;
                 if (beam != null && beam.Name == "TOWER_LEG")
                 {
-                    // Check if this beam matches the level and index
-                    // Note: This matches the "LEG_0_1" format used in your LegBuilder
-                    // You can also check position.Z if labels aren't mapping correctly.
                     return beam;
                 }
             }
@@ -400,12 +446,6 @@ namespace RambollTowerGenerator.Builders
             return beam;
         }
 
-        /// <summary>
-        /// Returns the horizontal outward normal of the face defined by leg1 and leg2
-        /// at the given Z. "Outward" = pointing away from the tower's horizontal centroid.
-        /// Depending on which face we're on, this resolves naturally to +X, -X, +Y, or -Y
-        /// (or a diagonal for non-orthogonal towers).
-        /// </summary>
         private Vector GetOutwardFaceNormal(List<List<Point>> legNodes, int leg1Index, int leg2Index, double z)
         {
             // Tower center in XY at this Z (average of all leg centerlines)
@@ -432,11 +472,6 @@ namespace RambollTowerGenerator.Builders
             return outward;
         }
     }
-
-    /// <summary>
-    /// Holds the beams and key work points of a single X-bracing panel so that
-    /// bolting between adjacent levels can be done after every brace exists.
-    /// </summary>
     internal class BracingPanel
     {
         public int Level { get; set; }
