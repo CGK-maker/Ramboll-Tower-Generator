@@ -55,6 +55,9 @@ namespace RambollTowerGenerator.Builders
             double legWidth = GetWidthFromProfile(tower.Profile.LegProfile);
             double halfLeg = legWidth / 2.0;
 
+            // Collect every X-bracing panel so we can bolt them together AFTER all braces exist.
+            List<BracingPanel> panels = new List<BracingPanel>();
+
             for (int level = 0; level < bracingLevels; level++)
             {
                 double levelBottomZ = zStart + (level * levelHeight);
@@ -137,38 +140,63 @@ namespace RambollTowerGenerator.Builders
                         false);
                     diagonal2.Insert();
 
-                    // Bolt at Bottom Right Leg (Leg + Diagonal 2)
-                    // IMPORTANT (Tekla BoltArray orientation):
-                    //   FirstPosition -> SecondPosition defines the X-AXIS of the bolt PLANE
-                    //   (the gauge/distribution line). The bolt SHAFT runs along the plane
-                    //   NORMAL = (SecondPosition - FirstPosition) x up.
-                    //   So to make the shaft point along the outward face normal (the X axis
-                    //   through the leg), the two positions must run ALONG THE FACE (tangent),
-                    //   NOT along the outward normal. Position.Rotation then just flips +X/-X.
-                    Vector faceTangent = new Vector(vLtoR.X, vLtoR.Y, 0);
-                    faceTangent.Normalize();
-
-                    Point boltFirst  = bottomRightShifted;
-                    Point boltSecond = new Point(
-                        boltFirst.X + (faceTangent.X * 20.0),
-                        boltFirst.Y + (faceTangent.Y * 20.0),
-                        boltFirst.Z);
-
-                    CreateTripleBolt(diagonal1, diagonal2, null, boltFirst, boltSecond, diagWidth);
-
-                    Vector faceTangent1 = new Vector(vRtoL.X, vRtoL.Y, 0);
-                    faceTangent.Normalize();
-
-                    Point boltFirst1 = topLeftShifted;
-                    Point boltSecond1 = new Point(
-                        boltFirst1.X + (faceTangent1.X * 20.0),
-                        boltFirst1.Y + (faceTangent1.Y * 20.0),
-                        boltFirst1.Z);
-
-                    CreateTripleBolt(diagonal1, diagonal2, null, boltFirst1, boltSecond1, diagWidth);
+                    // Record this panel; bolting happens LATER once ALL braces exist.
+                    // Bolting inside this loop referenced braces from the next level that
+                    // were not yet created, so the bolt got buried by geometry made after it.
+                    panels.Add(new BracingPanel
+                    {
+                        Level = level,
+                        FaceIndex = faceIndex,
+                        Diagonal1 = diagonal1,
+                        Diagonal2 = diagonal2,
+                        BottomLeft = bottomLeft,
+                        TopRight = topRight,
+                        BottomRightShifted = bottomRightShifted,
+                        TopLeftShifted = topLeftShifted,
+                        FaceTangent = new Vector(vLtoR.X, vLtoR.Y, 0),
+                        DiagWidth = diagWidth
+                    });
                 }
 
                 CreateHorizontalBracingRingAtZ(tower, legNodes, levelMidZ, level, halfLeg);
+            }
+
+            // 3. All braces now exist -> bolt adjacent X-bracing levels together.
+            CreateAllBolts(panels);
+        }
+
+        /// <summary>
+        /// Bolts adjacent X-bracing levels together, on each face:
+        ///   - level n diagonal2 (TopLeftShifted) connects to level n+1 diagonal1 (BottomLeft)
+        ///   - level n diagonal1 (TopRight)       connects to level n+1 diagonal2 (BottomRightShifted)
+        /// Runs AFTER every brace has been inserted so no bolt gets buried by later geometry.
+        /// </summary>
+        private void CreateAllBolts(List<BracingPanel> panels)
+        {
+            // Index panels by (level, faceIndex) for quick lookup of the level above.
+            Dictionary<string, BracingPanel> byKey = new Dictionary<string, BracingPanel>();
+            foreach (BracingPanel p in panels)
+                byKey[p.Level + "_" + p.FaceIndex] = p;
+
+            foreach (BracingPanel current in panels)
+            {
+                string nextKey = (current.Level + 1) + "_" + current.FaceIndex;
+                if (!byKey.TryGetValue(nextKey, out BracingPanel next))
+                    continue; // top-most level has nothing above to connect to
+
+                // The bolt shaft runs along the plane NORMAL, so FirstPosition->SecondPosition
+                // must run ALONG THE FACE (tangent). See CreateTripleBolt for details.
+                Vector t = current.FaceTangent;
+
+                // Bolt 1: current diagonal2 top (TopLeftShifted) meets next diagonal1 bottom.
+                Point boltA = current.TopLeftShifted;
+                Point boltADir = new Point(boltA.X + (t.X * 20.0), boltA.Y + (t.Y * 20.0), boltA.Z);
+                CreateTripleBolt(current.Diagonal2, next.Diagonal1, null, boltA, boltADir, current.DiagWidth);
+
+                // Bolt 2: current diagonal1 top (TopRight) meets next diagonal2 bottom.
+                Point boltB = current.TopRight;
+                Point boltBDir = new Point(boltB.X + (t.X * 20.0), boltB.Y + (t.Y * 20.0), boltB.Z);
+                CreateTripleBolt(current.Diagonal1, next.Diagonal2, null, boltB, boltBDir, current.DiagWidth);
             }
         }
 
@@ -227,8 +255,8 @@ namespace RambollTowerGenerator.Builders
             boltArray.BoltSize = 16.0;
             boltArray.BoltStandard = "8.8XOX";
             boltArray.Tolerance = 2.0;
-            boltArray.CutLength = 50.0; // Large enough for Leg + 2 Braces
-            boltArray.ExtraLength = 50.0;
+            boltArray.CutLength = 0; // Large enough for Leg + 2 Braces
+            boltArray.ExtraLength = 0;
 
             boltArray.Bolt = true;
             boltArray.Washer1 = true;
@@ -403,5 +431,23 @@ namespace RambollTowerGenerator.Builders
             outward.Normalize();
             return outward;
         }
+    }
+
+    /// <summary>
+    /// Holds the beams and key work points of a single X-bracing panel so that
+    /// bolting between adjacent levels can be done after every brace exists.
+    /// </summary>
+    internal class BracingPanel
+    {
+        public int Level { get; set; }
+        public int FaceIndex { get; set; }
+        public Beam Diagonal1 { get; set; }
+        public Beam Diagonal2 { get; set; }
+        public Point BottomLeft { get; set; }
+        public Point TopRight { get; set; }
+        public Point BottomRightShifted { get; set; }
+        public Point TopLeftShifted { get; set; }
+        public Vector FaceTangent { get; set; }
+        public double DiagWidth { get; set; }
     }
 }
