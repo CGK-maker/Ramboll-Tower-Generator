@@ -255,8 +255,8 @@ namespace RambollTowerGenerator.Builders
             boltArray.BoltSize = 16.0;
             boltArray.BoltStandard = "8.8XOX";
             boltArray.Tolerance = 2.0;
-            boltArray.CutLength = 0; // Large enough for Leg + 2 Braces
-            boltArray.ExtraLength = 0;
+            boltArray.CutLength = 50; // Large enough for Leg + 2 Braces
+
 
             boltArray.Bolt = true;
             boltArray.Washer1 = true;
